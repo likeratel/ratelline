@@ -8,9 +8,17 @@ English · [한국어](README.ko.md) · [日本語](README.ja.md) · [简体中�
 
 ratelline is a menu-bar and system-tray app that patrols your deploy lines: recent runs at a glance, with failures shown as plainly as successes. It is named after the ratel, the honey badger that does not back off from a few stings. Check deployment and CI status in the panel, then open the dashboard to connect accounts, search history, and configure notifications. Built with Tauri 2, React, TypeScript, and Rust; service queries run on your computer. The interface follows your system language and supports English, Korean, Japanese, and Simplified Chinese.
 
+> Built with AI. I set the direction and checked the integrations against my own accounts; the code, tests and docs were written in sessions with [Claude Code](https://claude.com/claude-code). See [Why I built this](#why-i-built-this).
+
 **Download:** the signed and notarized macOS build (Apple Silicon and Intel) is on the [Releases page](https://github.com/likeratel/ratelline/releases). No Windows installer is published yet.
 
 > **Verification status.** GitHub Actions, Vercel, and Bitbucket Cloud have been exercised with real accounts. Every other service is covered by command-contract tests against official CLI and API documentation using synthetic data, not by a live-account check. See [provider verification](docs/provider-verification.md) and the [2026-10-06 product review](docs/product-review-2026-10-06.md).
+
+## Why I built this
+
+My deployments were spread across GitHub Actions, Vercel, AWS and Bitbucket, and finding out whether the last push had landed meant opening four dashboards. I wanted a menu-bar app that answers that in a glance, shows a failed run as plainly as a successful one, and never holds a token anywhere but my own machine. It started as crowline (crows on a wire); it became ratelline when the honey badger took over as the mascot, because that is the attitude I want from a deploy monitor.
+
+What I did: chose the services and the read-only scope, verified GitHub Actions, Vercel and Bitbucket Cloud against real accounts, kept the other providers honest with contract tests instead of claiming more, and ran every change through an independent review before it was committed. The implementation, the tests and these docs were written with Claude Code; the ratel artwork was generated from prompts and composed into the icons by hand.
 
 ## See it in action
 

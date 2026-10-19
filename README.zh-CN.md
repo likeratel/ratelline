@@ -8,9 +8,17 @@
 
 ratelline 是在菜单栏和系统托盘中无畏巡视部署线的监视者。名字来自蜜獾（ratel）——被蜜蜂蜇几下也绝不退缩。失败的部署不会被隐藏，而是和成功一样直接显示。通过摘要面板快速查看最近的执行记录，在仪表板中连接账号、搜索历史并设置通知。应用使用 Tauri 2、React、TypeScript 和 Rust 构建，所有服务查询都在本机进行。界面默认跟随系统语言，支持简体中文、英语、韩语和日语。
 
+> 与 AI 一起完成。方向由我决定，集成也是用我自己的账号验证的；代码、测试和文档则是在与 [Claude Code](https://claude.com/claude-code) 的会话中编写的。参见[为什么做这个](#为什么做这个)。
+
 **下载：** 已签名并公证的 macOS 版本（Apple Silicon 和 Intel）见 [Releases 页面](https://github.com/likeratel/ratelline/releases)。Windows 安装包尚未发布。
 
 > **验证范围。** GitHub Actions、Vercel 和 Bitbucket Cloud 已使用真实账号验证。其他服务仅依据官方 CLI/API 文档，使用虚构数据完成命令契约测试，未经真实账号验证。详见[服务验证记录](docs/provider-verification.md)和 [2026-10-06 产品评审](docs/product-review-2026-10-06.md)。
+
+## 为什么做这个
+
+我的部署分散在 GitHub Actions、Vercel、AWS 和 Bitbucket 上，想知道最后一次推送是否上线，得打开四个仪表板。我需要一个菜单栏应用：一眼给出答案，把失败的执行和成功的一样直接显示，并且永远不把令牌放到我自己的电脑之外。它最初叫 crowline（电线上的乌鸦），蜜獾成为吉祥物后改名为 ratelline，因为那正是我希望部署监视者具备的态度。
+
+我做的事：确定支持的服务和只读范围，用真实账号验证了 GitHub Actions、Vercel 和 Bitbucket Cloud，其余服务只以契约测试约束而不夸大支持，并且每一项改动都经过独立审查后再提交。实现、测试和这些文档由 Claude Code 编写；蜜獾插画由提示词生成，再手工组合成图标。
 
 ## 界面预览
 
