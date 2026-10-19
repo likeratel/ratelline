@@ -536,7 +536,12 @@ pub struct Toolchain {
     local: HashMap<Provider, CliInvocation>,
     account_config_root: PathBuf,
     account_gates: std::sync::Mutex<HashMap<String, std::sync::Arc<Semaphore>>>,
+    /// Concurrent CLI processes allowed per account.
+    account_gate_permits: usize,
 }
+
+/// Production allows four CLI processes per account at a time.
+const ACCOUNT_GATE_PERMITS: usize = 4;
 
 impl Toolchain {
     pub async fn discover(_resource_dir: Option<&Path>, app_data_dir: &Path) -> Self {
@@ -581,6 +586,7 @@ impl Toolchain {
             local,
             account_config_root: app_data_dir.join("accounts"),
             account_gates: std::sync::Mutex::new(HashMap::new()),
+            account_gate_permits: ACCOUNT_GATE_PERMITS,
         }
     }
 
@@ -593,13 +599,18 @@ impl Toolchain {
             local: HashMap::new(),
             account_config_root: app_data_dir.join("accounts"),
             account_gates: std::sync::Mutex::new(HashMap::new()),
+            account_gate_permits: ACCOUNT_GATE_PERMITS,
         }
     }
 
+    /// The fake GitHub CLI of the refresh tests blocks active probes until a later recent
+    /// lookup starts, so the per-account gate must hold every probe plus the lookups they wait
+    /// for; with the production four, the probes starve the lookup on a slow runner.
     #[cfg(all(test, unix))]
     pub(crate) fn github_for_test(app_data_dir: &Path, cli: CliInvocation) -> Self {
         Self {
             github: Some(cli),
+            account_gate_permits: 32,
             ..Self::unavailable_for_test(app_data_dir)
         }
     }
@@ -629,7 +640,7 @@ impl Toolchain {
                 .map_err(|_| "CLI account coordination is unavailable.".to_owned())?;
             gates
                 .entry(account.id.clone())
-                .or_insert_with(|| std::sync::Arc::new(Semaphore::new(4)))
+                .or_insert_with(|| std::sync::Arc::new(Semaphore::new(self.account_gate_permits)))
                 .clone()
         };
         let mut invocation = base.clone();
