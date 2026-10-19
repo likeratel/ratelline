@@ -1291,7 +1291,11 @@ async fn queued_recent_pages_start_before_slow_active_scans() {
         third_recent < first_active_done,
         "queued recent lookup must start before slow active probes complete"
     );
-    assert!(done.issues.is_empty());
+    assert!(
+        done.issues.is_empty(),
+        "unexpected issues: {:?}",
+        done.issues
+    );
 }
 
 #[cfg(unix)]
