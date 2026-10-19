@@ -8,9 +8,9 @@
 use std::time::Duration;
 
 /// Delay between walking frames.
-pub(crate) const FRAME_INTERVAL: Duration = Duration::from_millis(160);
+pub(crate) const FRAME_INTERVAL: Duration = Duration::from_millis(140);
 /// Number of frames in the walking cycle (`icons/tray-walk/walk-{0..3}@2x.png`).
-pub(crate) const FRAME_COUNT: usize = 4;
+pub(crate) const FRAME_COUNT: usize = 6;
 /// The standing pose shown whenever the ratel is not walking.
 pub(crate) const IDLE_FRAME: usize = 0;
 
@@ -61,6 +61,8 @@ mod macos {
         include_bytes!("../icons/tray-walk/walk-1@2x.png"),
         include_bytes!("../icons/tray-walk/walk-2@2x.png"),
         include_bytes!("../icons/tray-walk/walk-3@2x.png"),
+        include_bytes!("../icons/tray-walk/walk-4@2x.png"),
+        include_bytes!("../icons/tray-walk/walk-5@2x.png"),
     ];
 
     /// Owns the single walking task. Every start or stop bumps `generation`;
@@ -265,7 +267,7 @@ mod tests {
             std::iter::successors(Some(IDLE_FRAME), |frame| Some(next_frame(*frame)))
                 .take(FRAME_COUNT + 2)
                 .collect();
-        assert_eq!(sequence, [0, 1, 2, 3, 0, 1]);
+        assert_eq!(sequence, [0, 1, 2, 3, 4, 5, 0, 1]);
         assert_eq!(next_frame(FRAME_COUNT - 1), IDLE_FRAME);
     }
 
