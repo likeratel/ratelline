@@ -502,7 +502,9 @@ mod tests {
     #[test]
     fn menu_bar_icon_is_a_retina_template_glyph() {
         let icon = super::Image::from_bytes(super::MENU_BAR_TEMPLATE_ICON).unwrap();
-        assert_eq!((icon.width(), icon.height()), (44, 44));
+        // 22pt tall at 2x; the side-profile ratel is wider than it is tall.
+        assert_eq!(icon.height(), 44);
+        assert!((44..=88).contains(&icon.width()), "width {}", icon.width());
         let (pixels, _) = icon.rgba().as_chunks::<4>();
         assert!(pixels
             .iter()
