@@ -16,7 +16,7 @@ A new user can connect a service, verify the account, select projects and unders
 Non-goals: deployment mutation, remote infrastructure management, a hosted backend, or automatically installing/logging into third-party tools.
 
 ## Personas and jobs
-Developers using one or several personal/work accounts; first-time users unfamiliar with Crowline terminology; team members who need all project runs while limiting another service to their own. The tray is a quick status check; the dashboard is for investigation and configuration.
+Developers using one or several personal/work accounts; first-time users unfamiliar with Ratelline terminology; team members who need all project runs while limiting another service to their own. The tray is a quick status check; the dashboard is for investigation and configuration.
 
 ## Information architecture
 Dashboard: title/refresh, compact activity summary, clearly labeled search/account/period filters, current display scope, recent and active executions. Large sections render 50 rows initially with Show more; search always covers the entire loaded history. With no selected projects, show the connection action immediately after the header and omit inactive filters/history. Healthy connection details and explanatory help follow the activity lists; actionable failures remain before them. Sidebar service filters and one Settings entry remain.

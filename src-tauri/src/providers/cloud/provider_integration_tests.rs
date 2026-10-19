@@ -16,7 +16,7 @@ struct FakeCli {
 impl FakeCli {
     fn new(name: &str, cases: &[(&str, &str)]) -> Self {
         let root = std::env::temp_dir().join(format!(
-            "crowline-{name}-provider-test-{}",
+            "ratelline-{name}-provider-test-{}",
             uuid::Uuid::new_v4()
         ));
         fs::create_dir_all(&root).expect("create fake CLI directory");

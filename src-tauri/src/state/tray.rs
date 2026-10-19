@@ -53,11 +53,11 @@ pub(super) fn presentation(
         _ => format!("Check query status for {affected} projects"),
     };
     let tooltip = if affected > 0 {
-        format!("crowline — {status} · {attention}")
+        format!("ratelline — {status} · {attention}")
     } else if active > 0 {
-        format!("crowline — {status}")
+        format!("ratelline — {status}")
     } else {
-        "crowline".into()
+        "ratelline".into()
     };
     (title, tooltip)
 }

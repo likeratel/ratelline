@@ -69,7 +69,7 @@ test("default view is a compact summary with dashboard entry and no settings con
   );
   await expect(page.getByLabel("서비스 필터")).toHaveCount(0);
   await expect(page.getByRole("button", { name: "설정" })).toHaveCount(0);
-  await page.screenshot({ path: "artifacts/crowline-panel.png" });
+  await page.screenshot({ path: "artifacts/ratelline-panel.png" });
   expect(
     await page.evaluate(
       () => document.documentElement.scrollWidth <= window.innerWidth,
@@ -101,7 +101,7 @@ test("connection controls remain usable in a narrow dashboard", async ({
       (element) => element.scrollWidth <= element.clientWidth,
     ),
   ).toBe(true);
-  await page.screenshot({ path: "artifacts/crowline-panel-settings.png" });
+  await page.screenshot({ path: "artifacts/ratelline-panel-settings.png" });
 });
 
 test("adds a separate account without inheriting another account's selected targets", async ({
@@ -230,7 +230,7 @@ test("saved panel preferences affect the panel while preserving dashboard rows",
     menuBar.getByLabel("최근 종료 표시", { exact: true }),
   ).not.toBeChecked();
   await page.screenshot({
-    path: "artifacts/crowline-panel-preferences.png",
+    path: "artifacts/ratelline-panel-preferences.png",
     fullPage: true,
   });
   await page.evaluate(() =>
@@ -459,5 +459,5 @@ test("panel preserves workflow names without repeating titles or overflowing", a
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await page.screenshot({ path: "artifacts/crowline-panel-workflow.png" });
+  await page.screenshot({ path: "artifacts/ratelline-panel-workflow.png" });
 });

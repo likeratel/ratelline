@@ -164,7 +164,7 @@ export const zhCN = {
   "connections.verifyHelp": "加载可通过所选连接访问的目标。",
   "connections.selectSave": "选择并保存目标",
   "connections.selectSaveHelp": "仅选择需要监控的目标，然后保存设置。",
-  "connections.readOnly": "Crowline仅查询运行状态，不会更改远程服务。",
+  "connections.readOnly": "Ratelline仅查询运行状态，不会更改远程服务。",
   "connections.checkConnection": "请检查连接",
   "connections.tokenNotNeeded": "将使用现有身份验证，无需输入令牌。",
   "connections.loginHelp": "使用下方按钮登录并加载可访问的目标。",

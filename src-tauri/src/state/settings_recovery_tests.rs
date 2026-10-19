@@ -3,7 +3,7 @@ use super::*;
 #[tokio::test]
 async fn unreadable_settings_remain_visible_and_block_changes_after_refresh() {
     let directory = std::env::temp_dir().join(format!(
-        "crowline-settings-recovery-{}",
+        "ratelline-settings-recovery-{}",
         uuid::Uuid::new_v4()
     ));
     std::fs::create_dir_all(&directory).unwrap();
@@ -69,7 +69,7 @@ async fn unreadable_settings_remain_visible_and_block_changes_after_refresh() {
 #[tokio::test]
 async fn first_run_without_settings_stays_writable() {
     let directory = std::env::temp_dir().join(format!(
-        "crowline-settings-first-run-{}",
+        "ratelline-settings-first-run-{}",
         uuid::Uuid::new_v4()
     ));
     let store = SettingsStore::new(directory.clone());

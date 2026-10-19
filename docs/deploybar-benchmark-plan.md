@@ -4,7 +4,7 @@
 
 ## 목표와 범위
 
-crowline은 로컬에서 현재 실행 중인 배포와 최근 결과를 빠르게 확인하는 조회 전용 앱이다. 상태바는 요약, 대시보드는 연결·대상·표시 설정과 필요한 추가 이력을 맡는다.
+ratelline은 로컬에서 현재 실행 중인 배포와 최근 결과를 빠르게 확인하는 조회 전용 앱이다. 상태바는 요약, 대시보드는 연결·대상·표시 설정과 필요한 추가 이력을 맡는다.
 
 사용자 추가 지시: 특별한 설정 없이 가능한 플랫폼은 모두 지원하고 DeployBar 밖의 후보도 찾는다. ‘특별한 설정 없이’는 기존 CLI/profile 인증 재사용 또는 서비스의 표준 로그인, 자동 대상 탐색과 목록 선택을 기준으로 해석한다. 별도 OAuth 앱 등록·수동 토큰 발급·프로젝트 ID 입력을 기본 경로로 요구하지 않는다. 이번 제안은 조회 속도 개선과 아래 플랫폼 전체의 지원 가능성 검증 및 조건을 충족하는 연동 구현을 포함한다. 알림, 재배포, 취소, 로그 수집, 서버 동기화는 이번 범위에 포함하지 않는다.
 
@@ -13,19 +13,19 @@ crowline은 로컬에서 현재 실행 중인 배포와 최근 결과를 빠르�
 DeployBar 기준 커밋: `e32bba03718bbf84ef24c266809a3f0a7b9075f5`.
 아래는 소스 구조 비교다. 실제 계정으로 두 앱을 실행한 속도 측정 결과가 아니다.
 
-| 항목 | 현재 crowline | DeployBar에서 확인한 방식 | 적용 방향 |
+| 항목 | 현재 ratelline | DeployBar에서 확인한 방식 | 적용 방향 |
 | --- | --- | --- | --- |
 | 최근 조회량 | GitHub: 저장소당 완료 5페이지 + 진행 상태 5종 각 2페이지, 페이지당 100건. 최소 6회, 최대 15회 배포 목록 호출 | Vercel 기본 20건, Railway·Netlify·Render·Cloudflare Pages 기본 10건 | 최신 20건을 첫 페이지로 제공하고 추가 이력은 요청 시 조회 |
 | Vercel 조회 | 프로젝트마다 최대 5×100건, 받은 뒤 기간 필터 | 대상별 소량 목록 | 서버 조건과 작은 첫 페이지 활용. 진행 확인은 별도로 보완 |
 | 병렬성과 표시 시점 | 계정 최대 6개 병렬이지만 계정 안의 대상은 순차, 전체 `join_all` 완료 뒤 게시 | 공통 provider 프로토콜과 registry. 계정 조회 루프 자체는 순차 | 제한된 대상 병렬 조회와 완료된 대상부터 점진 게시. DeployBar의 순차 실행을 그대로 도입하지 않음 |
 | AWS | 대상마다 SDK 설정 로딩, CloudFormation 이벤트 최대 5페이지 순차 | AWS 지원은 비교 대상 아님 | profile/region별 클라이언트 재사용, 현재 상태 우선 조회, 최근 이벤트 조기 종료 |
 | 화면 요약 | 진행·종료 실행 목록 | 프로젝트·서비스·환경·브랜치별 대표 배포 선택 | 진행 항목은 보존하고 종료 이력은 대상별 최신 결과 위주로 요약 |
-| 확장·인증 | 3개 provider 분기와 CLI/profile 인증 | provider descriptor, 공통 상태, 계정별 Keychain 토큰 | 공통 adapter는 참고하되 crowline은 기존 CLI 로그인 재사용 우선 |
+| 확장·인증 | 3개 provider 분기와 CLI/profile 인증 | provider descriptor, 공통 상태, 계정별 Keychain 토큰 | 공통 adapter는 참고하되 ratelline은 기존 CLI 로그인 재사용 우선 |
 
 추가 비용: GitHub/Vercel 연결 확인에서 매번 CLI 버전을 실행하며 Vercel은 수집 전에 사용자 조회를 반복한다. 현재 24시간 제한은 화면과 집계에 적용되므로 네트워크 요청량은 줄이지 않는다.
 
 근거 코드:
-- crowline: `src-tauri/src/state.rs`, `providers/github.rs`, `providers/vercel.rs`, `providers/aws/mod.rs`, `cli.rs`.
+- ratelline: `src-tauri/src/state.rs`, `providers/github.rs`, `providers/vercel.rs`, `providers/aws/mod.rs`, `cli.rs`.
 - [DeployBar VercelProvider](https://github.com/snapre/DeployBar/blob/e32bba03718bbf84ef24c266809a3f0a7b9075f5/Sources/DeployBarCore/VercelProvider.swift)
 - [DeployBar RailwayProvider](https://github.com/snapre/DeployBar/blob/e32bba03718bbf84ef24c266809a3f0a7b9075f5/Sources/DeployBarCore/RailwayProvider.swift)
 - [DeployBar RefreshCoordinator](https://github.com/snapre/DeployBar/blob/e32bba03718bbf84ef24c266809a3f0a7b9075f5/Sources/DeployBarCore/RefreshCoordinator.swift)
@@ -120,7 +120,7 @@ DeployBar 기준 커밋: `e32bba03718bbf84ef24c266809a3f0a7b9075f5`.
 
 ## 구현 결과 및 검증 (2026-09-30)
 
-사용자가 구현을 승인한 범위에서 최근 페이지·추가 이력·플랫폼 카탈로그를 통합했다. DeployBar의 작은 최근 목록과 공급자별 상태 매핑을 참고했고, 계정/대상별 결과를 즉시 게시하는 crowline 조회 구조를 유지했다.
+사용자가 구현을 승인한 범위에서 최근 페이지·추가 이력·플랫폼 카탈로그를 통합했다. DeployBar의 작은 최근 목록과 공급자별 상태 매핑을 참고했고, 계정/대상별 결과를 즉시 게시하는 ratelline 조회 구조를 유지했다.
 
 ### 요청과 표시 시점
 

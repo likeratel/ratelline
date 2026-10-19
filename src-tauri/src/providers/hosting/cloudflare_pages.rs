@@ -147,7 +147,7 @@ pub async fn discover(_cli: Option<&CliInvocation>, account: &Account) -> Discov
             Provider::CloudflarePages,
             &account.id,
             None,
-            "Cloudflare Pages discovery reached crowline's 5,000-project safety limit. Results are partial.",
+            "Cloudflare Pages discovery reached ratelline's 5,000-project safety limit. Results are partial.",
         ));
     }
     Discovery {
@@ -227,7 +227,7 @@ pub async fn page_api(target: &Target, cursor: Option<&str>) -> Result<ActivityP
                     Provider::CloudflarePages,
                     &target.connection_id,
                     Some(&target.id),
-                    "Cloudflare Pages history reached crowline's 10,000-page cursor safety limit.",
+                    "Cloudflare Pages history reached ratelline's 10,000-page cursor safety limit.",
                 ));
             }
             issues
@@ -307,7 +307,7 @@ pub async fn active_api(target: &Target) -> Result<ActivityPage, String> {
                     Provider::CloudflarePages,
                     &target.connection_id,
                     Some(&target.id),
-                    "Cloudflare Pages active scan reached crowline's 200-deployment safety limit. Active results are partial.",
+                    "Cloudflare Pages active scan reached ratelline's 200-deployment safety limit. Active results are partial.",
                 ));
             }
             issues

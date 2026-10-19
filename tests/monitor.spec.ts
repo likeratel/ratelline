@@ -73,7 +73,7 @@ test("black theme stays dark across OS preferences and fits narrow windows", asy
     "rgb(13, 14, 16)",
   );
   await page.screenshot({
-    path: "artifacts/crowline-black.png",
+    path: "artifacts/ratelline-black.png",
     fullPage: true,
   });
   await page.emulateMedia({ colorScheme: "dark" });
@@ -91,7 +91,7 @@ test("black theme stays dark across OS preferences and fits narrow windows", asy
     ),
   ).toBe(true);
   await page.screenshot({
-    path: "artifacts/crowline-dark.png",
+    path: "artifacts/ratelline-dark.png",
     fullPage: true,
   });
 });

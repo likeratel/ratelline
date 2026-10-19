@@ -1,14 +1,14 @@
-# crowline
+# ratelline
 
 [English](README.md) · [한국어](README.ko.md) · [日本語](README.ja.md) · 简体中文
 
-[![Verify desktop builds](https://github.com/likeratel/crowline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/crowline/actions/workflows/verify.yml)
+[![Verify desktop builds](https://github.com/likeratel/ratelline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/ratelline/actions/workflows/verify.yml)
 
-<img src="public/crowline.png" alt="三只停在电线上的乌鸦" width="160" />
+<img src="public/ratelline.png" alt="在部署线上巡逻的蜜獾" width="160" />
 
-crowline 是在菜单栏和系统托盘中查看部署与 CI 状态的应用。通过摘要面板快速查看最近的执行记录，在仪表板中连接账号、搜索历史并设置通知。应用使用 Tauri 2、React、TypeScript 和 Rust 构建，所有服务查询都在本机进行。界面默认跟随系统语言，支持简体中文、英语、韩语和日语。
+ratelline 是在菜单栏和系统托盘中无畏巡视部署线的监视者。名字来自蜜獾（ratel）——被蜜蜂蜇几下也绝不退缩。失败的部署不会被隐藏，而是和成功一样直接显示。通过摘要面板快速查看最近的执行记录，在仪表板中连接账号、搜索历史并设置通知。应用使用 Tauri 2、React、TypeScript 和 Rust 构建，所有服务查询都在本机进行。界面默认跟随系统语言，支持简体中文、英语、韩语和日语。
 
-**下载：** 已签名并公证的 macOS 版本（Apple Silicon 和 Intel）见 [Releases 页面](https://github.com/likeratel/crowline/releases)。Windows 安装包尚未发布。
+**下载：** 已签名并公证的 macOS 版本（Apple Silicon 和 Intel）见 [Releases 页面](https://github.com/likeratel/ratelline/releases)。Windows 安装包尚未发布。
 
 > **验证范围。** GitHub Actions、Vercel 和 Bitbucket Cloud 已使用真实账号验证。其他服务仅依据官方 CLI/API 文档，使用虚构数据完成命令契约测试，未经真实账号验证。详见[服务验证记录](docs/provider-verification.md)和 [2026-10-06 产品评审](docs/product-review-2026-10-06.md)。
 
@@ -46,8 +46,8 @@ crowline 是在菜单栏和系统托盘中查看部署与 CI 状态的应用。�
 需要 Node.js 22.23.3 或更高版本、pnpm 10 与 Rust stable。macOS 需 Xcode Command Line Tools，Windows 需 Microsoft C++ Build Tools、WebView2 等 [Tauri 前置条件](https://v2.tauri.app/start/prerequisites/)。
 
 ```sh
-git clone https://github.com/likeratel/crowline.git
-cd crowline
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
 pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
@@ -66,7 +66,7 @@ pnpm desktop:build
 
 显示范围按应用默认 → 服务 → 项目继承，项目设置优先。“我的运行 / 所有运行”同时应用于仪表板、历史和菜单栏，通知规则独立。新监控项目默认启用“我的运行 · 所有结果”通知规则，不改变现有规则和全局通知开关。别名使用保存和取消按钮，并显示保存完成状态。批量选择按钮在“全选 / 取消全选”之间切换，仅作用于当前搜索结果。[服务验证记录](docs/provider-verification.md)区分命令契约测试与真实账户查询。
 
-GitHub 使用已安装的 `gh` CLI。运行 `gh auth login` 后，为每个连接选择 CLI 用户。Vercel 使用已安装的 CLI，并为其他账号分离配置。无需注册 Crowline OAuth 或输入 GitHub/Vercel 令牌。AWS 继续使用共享配置文件。
+GitHub 使用已安装的 `gh` CLI。运行 `gh auth login` 后，为每个连接选择 CLI 用户。Vercel 使用已安装的 CLI，并为其他账号分离配置。无需注册 Ratelline OAuth 或输入 GitHub/Vercel 令牌。AWS 继续使用共享配置文件。
 
 保留连接 ID、监控目标、别名和通知规则。从 API 迁移的 GitHub 连接需选择同一 CLI 用户，Vercel 需在对应配置中重新登录。Bitbucket 保留令牌认证。参见[认证说明](docs/authentication.md)。
 
@@ -108,16 +108,18 @@ Cloudflare 令牌保存在 OS 凭据存储中。Pages 需要 **Cloudflare Pages 
 - **菜单栏面板：** 显示服务图标、状态、分支、触发人以及每个目标的查询状态摘要。服务提供名称时，还会显示 GitHub 工作流、Vercel 部署、Bitbucket 自定义流水线、GitLab 流水线或任务、Cloud Build 触发器的名称。同名内容只显示一次。点击面板外或按 `Esc` 可关闭。
 - **仪表板：** 按服务、账号、仅我的执行、全部执行及页面内的执行状态筛选，并搜索历史。服务支持时可加载更早的记录。触发人未知的记录包含在全部执行中。状态筛选不会更改已保存的显示范围或通知规则。打开执行详情可查看已收集的上下文、服务提供的执行更新时间和目标查询状态。
 - **通知：** 为每个项目选择关闭、仅我的执行或全部执行，以及所有结果、仅成功、仅失败或自定义。通知包含服务、结果、执行名称与标题、项目、分支和触发人。较长内容可能被系统横幅截断。启动后首次获取的历史结果不会触发通知。
-- **菜单栏设置：** 选择显示的服务、项目以及每个区域的行数（1～10）。执行记录始终按最新时间排序。在 macOS 上可按住 Command 拖动乌鸦图标调整位置。
+- **菜单栏设置：** 选择显示的服务、项目以及每个区域的行数（1～10）。执行记录始终按最新时间排序。在 macOS 上可按住 Command 拖动蜜獾图标调整位置。
 - **通用：** 管理语言、登录时启动、更新检查和应用版本。
 
-进行中的记录超过 24 小时后仍会显示最后观察到的状态，这不表示失败。Vercel `BLOCKED` 记录会被隐藏。已完成的历史支持最近 24 小时或 7 天。crowline 只读，不会部署、重跑、取消任务或修改基础设施。
+进行中的记录超过 24 小时后仍会显示最后观察到的状态，这不表示失败。Vercel `BLOCKED` 记录会被隐藏。已完成的历史支持最近 24 小时或 7 天。ratelline 只读，不会部署、重跑、取消任务或修改基础设施。
 
 ## 更新、数据和限制
 
 存在运行中的任务时约每 30 秒查询一次，空闲时约每 120 秒一次，出错后会延长间隔。应用按监控目标显示查询状态和新鲜度；服务提供的执行更新时间与本地查询时间不同。回到前台或网络恢复时，过期或不完整的结果可以请求一次合并后的重新查询。超时、部分查询失败和分页上限会在界面中显示。延迟获取的结果可能不触发通知，完整记录请查看服务本身。
 
-设置与隐藏执行记录保存在系统应用数据目录的 `io.crowline.desktop/settings.json` 中。Bitbucket 令牌保存在系统凭据存储中。通过 gh 获取的用户令牌仅用于对应子进程，Crowline 不保存令牌。
+设置与隐藏执行记录保存在系统应用数据目录的 `io.ratelline.desktop/settings.json` 中。Bitbucket 令牌保存在系统凭据存储中。通过 gh 获取的用户令牌仅用于对应子进程，Ratelline 不保存令牌。
+
+**从 crowline 升级：** ratelline 的旧名称是 crowline。首次启动时，如果新的数据目录 `io.ratelline.desktop` 为空，应用会从 `io.crowline.desktop` 复制设置和账号文件夹；旧目录不会被删除，复制失败会记录日志并继续启动。Bitbucket 和 Cloudflare 令牌会在首次使用时从旧凭据条目（`com.likeratel.crowline.*`）读取，并以新名称（`com.likeratel.ratelline.*`）保存。macOS 可能会询问一次是否允许读取旧钥匙串项目。删除连接时会同时删除新旧条目。详见[发布说明](docs/releases.md#upgrading-from-crowline)。
 
 如果无法读取设置或保存迁移后的设置，应用会保留原始文件，锁定设置及账户更改，并显示恢复提示。请恢复有效备份或文件夹权限后重启应用。已读取的设置和监控结果仍可查看。
 
@@ -151,6 +153,6 @@ cargo clippy --all-targets -- -D warnings
 
 ## 许可证
 
-crowline 使用 [MIT License](LICENSE)。当前包和标志声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。乌鸦图标来源见[品牌说明](docs/brand.md)。
+ratelline 使用 [MIT License](LICENSE)。当前包和标志声明见 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)。蜜獾图标来源见[品牌说明](docs/brand.md)。
 
-crowline 是独立项目，与 GitHub、Vercel、Amazon Web Services、Atlassian、Cloudflare、Google、Microsoft 等可监控的服务没有任何从属、认可或赞助关系。服务名称和标志是各自所有者的商标，仅用于标识对应的服务。
+ratelline 是独立项目，与 GitHub、Vercel、Amazon Web Services、Atlassian、Cloudflare、Google、Microsoft 等可监控的服务没有任何从属、认可或赞助关系。服务名称和标志是各自所有者的商标，仅用于标识对应的服务。

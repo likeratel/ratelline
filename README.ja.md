@@ -1,14 +1,14 @@
-# crowline
+# ratelline
 
 [English](README.md) · [한국어](README.ko.md) · 日本語 · [简体中文](README.zh-CN.md)
 
-[![Verify desktop builds](https://github.com/likeratel/crowline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/crowline/actions/workflows/verify.yml)
+[![Verify desktop builds](https://github.com/likeratel/ratelline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/ratelline/actions/workflows/verify.yml)
 
-<img src="public/crowline.png" alt="電線にとまる三羽のカラス" width="160" />
+<img src="public/ratelline.png" alt="デプロイラインを見回るラーテル" width="160" />
 
-crowline はデプロイと CI の実行状況を確認するメニューバー・システムトレイアプリです。パネルで最近の実行を確認し、ダッシュボードでアカウント接続、履歴検索、通知を設定できます。Tauri 2、React、TypeScript、Rust 製で、サービスへの問い合わせは利用者のコンピューター上で行います。表示言語はシステム設定に従い、日本語・英語・韓国語・簡体字中国語に対応します。
+ratelline はデプロイラインを恐れずに見回るメニューバー・システムトレイの監視役です。名前は、ハチに刺されても引き下がらないラーテル（ミツアナグマ）に由来します。失敗したデプロイも隠さず、成功と同じようにすぐ見せます。パネルで最近の実行を確認し、ダッシュボードでアカウント接続、履歴検索、通知を設定できます。Tauri 2、React、TypeScript、Rust 製で、サービスへの問い合わせは利用者のコンピューター上で行います。表示言語はシステム設定に従い、日本語・英語・韓国語・簡体字中国語に対応します。
 
-**ダウンロード:** 署名・公証済みの macOS ビルド（Apple Silicon・Intel）は [Releases ページ](https://github.com/likeratel/crowline/releases)にあります。Windows インストーラーはまだ公開していません。
+**ダウンロード:** 署名・公証済みの macOS ビルド（Apple Silicon・Intel）は [Releases ページ](https://github.com/likeratel/ratelline/releases)にあります。Windows インストーラーはまだ公開していません。
 
 > **検証範囲。** GitHub Actions、Vercel、Bitbucket Cloud は実際のアカウントで動作を確認しています。その他のサービスは公式 CLI・API ドキュメントに基づき、架空データによるコマンド契約テストのみを行っており、実アカウントでの検証はしていません。[プロバイダー検証記録](docs/provider-verification.md)と [2026-10-06 の製品レビュー](docs/product-review-2026-10-06.md)を参照してください。
 
@@ -46,8 +46,8 @@ crowline はデプロイと CI の実行状況を確認するメニューバー�
 Node.js 22.23.3 以降、pnpm 10、Rust stable が必要です。macOS は Xcode Command Line Tools、Windows は Microsoft C++ Build Tools と WebView2 などの [Tauri 前提条件](https://v2.tauri.app/start/prerequisites/)を準備してください。
 
 ```sh
-git clone https://github.com/likeratel/crowline.git
-cd crowline
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
 pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
@@ -66,7 +66,7 @@ pnpm desktop:build
 
 表示範囲はアプリ既定値 → サービス → プロジェクトの順で継承し、プロジェクト設定を優先します。「自分の実行 / すべての実行」はダッシュボード・履歴・メニューバー共通です。通知ルールは独立しています。新規監視プロジェクトは「自分の実行・すべての結果」の通知ルールが有効になり、既存ルールと全体の通知スイッチは保持します。別名は保存・キャンセル操作と保存完了表示を備えます。一括選択は検索結果に対する「すべて選択 / すべて解除」の切り替えです。[サービス検証の根拠](docs/provider-verification.md)は契約テストと実アカウント検証を区別しています。
 
-GitHub はインストール済みの `gh` CLI を使います。`gh auth login` 後、接続ごとに CLI ユーザーを選択してください。Vercel はインストール済み CLI を使い、追加アカウントの設定を分離します。Crowline OAuth 登録や GitHub/Vercel トークン入力は不要です。AWS は共有プロファイルを使います。
+GitHub はインストール済みの `gh` CLI を使います。`gh auth login` 後、接続ごとに CLI ユーザーを選択してください。Vercel はインストール済み CLI を使い、追加アカウントの設定を分離します。Ratelline OAuth 登録や GitHub/Vercel トークン入力は不要です。AWS は共有プロファイルを使います。
 
 接続 ID、対象、別名、通知ルールは維持します。API 接続から移行した GitHub は同じ CLI ユーザーを選び、Vercel は該当設定で再ログインしてください。Bitbucket はトークン認証を維持します。[認証の詳細](docs/authentication.md)。
 
@@ -108,16 +108,18 @@ Cloudflare トークンは OS の資格情報ストアに保存します。Pages
 - **メニューバーパネル:** サービスのアイコン、状態、ブランチ、実行者と対象ごとの照会状態の要約を表示します。取得できる場合は GitHub ワークフロー、Vercel デプロイ、Bitbucket カスタムパイプライン、GitLab パイプライン・ジョブ、Cloud Build トリガーの名前も表示します。同じ名前は重複させません。外側のクリックか `Esc` で閉じます。
 - **ダッシュボード:** サービス、アカウント、自分の実行・すべての実行、画面内の実行状態で絞り込み、履歴を検索できます。サービスが対応していれば過去の履歴を追加で読み込めます。実行者不明の項目はすべての実行に含まれます。状態フィルターは保存済みの表示範囲や通知ルールを変更しません。実行の詳細では取得済みの文脈、サービスが返す実行更新時刻、対象の照会状態を確認できます。
 - **通知:** プロジェクトごとにオフ・自分の実行・すべての実行と、すべての結果・成功のみ・失敗のみ・カスタムを選びます。通知にはサービス、結果、実行名・タイトル、プロジェクト、ブランチ、実行者を含めます。長い内容は OS のバナーで省略される場合があります。起動直後に取得した過去の結果は通知しません。
-- **メニューバー設定:** 表示するサービス・プロジェクトと各欄の行数（1～10）を選びます。実行は常に新しい順です。macOS でアイコンの位置を変えるには、Command キーを押しながらカラスをドラッグします。
+- **メニューバー設定:** 表示するサービス・プロジェクトと各欄の行数（1～10）を選びます。実行は常に新しい順です。macOS でアイコンの位置を変えるには、Command キーを押しながらラーテルのアイコンをドラッグします。
 - **一般:** 言語、ログイン時の起動、更新確認、アプリのバージョンを管理します。
 
-進行中の項目は 24 時間を超えても最後に観測した状態とともに表示し、失敗とは見なしません。Vercel の `BLOCKED` は非表示にします。完了履歴は 24 時間または 7 日間で表示できます。crowline は参照専用で、デプロイ・再実行・キャンセル・インフラ変更は行いません。
+進行中の項目は 24 時間を超えても最後に観測した状態とともに表示し、失敗とは見なしません。Vercel の `BLOCKED` は非表示にします。完了履歴は 24 時間または 7 日間で表示できます。ratelline は参照専用で、デプロイ・再実行・キャンセル・インフラ変更は行いません。
 
 ## アップデート、データ、制限
 
 実行中の処理があるときは約 30 秒、ないときは約 120 秒間隔で取得し、エラー後は間隔を延ばします。アプリは監視対象ごとの照会状態と鮮度を表示し、サービスが返す実行の更新時刻はローカル照会時刻とは別です。画面への復帰またはネットワーク復旧時、古い・不完全な結果はまとめた再照会を要求できます。タイムアウト、部分的な取得失敗、ページ上限は画面に表示します。遅れて取得した結果は通知されない場合があるため、完全な記録は各サービスで確認してください。
 
-設定と非表示実行の記録は OS アプリデータ内の `io.crowline.desktop/settings.json` に保存します。Bitbucket トークンは OS 資格情報ストアに保存します。gh から取得したユーザー別トークンは該当プロセスでのみ使用し、Crowline は保存しません。
+設定と非表示実行の記録は OS アプリデータ内の `io.ratelline.desktop/settings.json` に保存します。Bitbucket トークンは OS 資格情報ストアに保存します。gh から取得したユーザー別トークンは該当プロセスでのみ使用し、Ratelline は保存しません。
+
+**crowline からのアップグレード:** ratelline の旧名は crowline です。初回起動時に新しいデータフォルダー `io.ratelline.desktop` が空であれば、`io.crowline.desktop` から設定とアカウントフォルダーをコピーします。旧フォルダーは削除せず、コピーの失敗はログに記録して起動を続けます。Bitbucket と Cloudflare のトークンは初回使用時に旧資格情報エントリ（`com.likeratel.crowline.*`）から読み取り、新しい名前（`com.likeratel.ratelline.*`）で保存します。macOS が旧キーチェーン項目へのアクセス許可を一度求めることがあります。接続を削除すると新旧両方のエントリを削除します。詳しくは[リリース文書](docs/releases.md#upgrading-from-crowline)を参照してください。
 
 設定の読み込みや移行後の保存に失敗した場合は、元のファイルを保護して設定・アカウント変更をロックし、復旧案内を表示します。有効なバックアップまたはフォルダーの権限を復元してから、アプリを再起動してください。読み込めた設定と監視結果は引き続き表示します。
 
@@ -151,6 +153,6 @@ cargo clippy --all-targets -- -D warnings
 
 ## ライセンス
 
-crowline は [MIT License](LICENSE) で提供します。現在のパッケージとロゴの告知は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)にあります。カラスアイコンの来歴は[ブランドノート](docs/brand.md)にあります。
+ratelline は [MIT License](LICENSE) で提供します。現在のパッケージとロゴの告知は [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)にあります。ラーテルアイコンの来歴は[ブランドノート](docs/brand.md)にあります。
 
-crowline は独立したプロジェクトです。GitHub、Vercel、Amazon Web Services、Atlassian、Cloudflare、Google、Microsoft など監視対象のサービスとは提携・承認・後援の関係にありません。サービス名とロゴは各所有者の商標であり、該当サービスを識別する目的でのみ使用しています。
+ratelline は独立したプロジェクトです。GitHub、Vercel、Amazon Web Services、Atlassian、Cloudflare、Google、Microsoft など監視対象のサービスとは提携・承認・後援の関係にありません。サービス名とロゴは各所有者の商標であり、該当サービスを識別する目的でのみ使用しています。

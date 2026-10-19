@@ -111,7 +111,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
             status: ConnectionStatus::Connected,
             account: Some(user.email),
             message: Some(
-                "DigitalOcean App Platform uses the existing doctl context. doctl may fetch full deployment history before crowline keeps the latest 20."
+                "DigitalOcean App Platform uses the existing doctl context. doctl may fetch full deployment history before ratelline keeps the latest 20."
                     .into(),
             ),
             cli_version: version,
@@ -199,7 +199,7 @@ fn map_deployments(
             PROVIDER,
             &target.connection_id,
             Some(&target.id),
-            "doctl list-deployments exposes no limit or cursor; crowline kept the latest 20 returned deployments, so older deployments are omitted.",
+            "doctl list-deployments exposes no limit or cursor; ratelline kept the latest 20 returned deployments, so older deployments are omitted.",
         ));
     }
     Ok(ActivityPage {

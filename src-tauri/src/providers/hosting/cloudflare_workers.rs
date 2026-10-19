@@ -271,7 +271,7 @@ pub async fn active_api(target: &Target) -> Result<ActivityPage, String> {
                     Provider::CloudflareWorkers,
                     &target.connection_id,
                     Some(&target.id),
-                    "Workers Builds active scan reached crowline's 400-build safety limit. Active results are partial.",
+                    "Workers Builds active scan reached ratelline's 400-build safety limit. Active results are partial.",
                 ));
             }
             issues
@@ -332,7 +332,7 @@ async fn deployment_page(
                     Provider::CloudflareWorkers,
                     &target.connection_id,
                     Some(&target.id),
-                    "Worker deployment history reached crowline's 10,000-page cursor safety limit.",
+                    "Worker deployment history reached ratelline's 10,000-page cursor safety limit.",
                 ));
             }
             issues
@@ -360,7 +360,7 @@ async fn build_page(
                     Provider::CloudflareWorkers,
                     &target.connection_id,
                     Some(&target.id),
-                    "Workers Builds history reached crowline's 10,000-page cursor safety limit.",
+                    "Workers Builds history reached ratelline's 10,000-page cursor safety limit.",
                 ));
             }
             issues

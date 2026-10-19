@@ -172,7 +172,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
                 status: ConnectionStatus::Error,
                 account: subscription.user.map(|user| user.name),
                 message: Some(
-                    "Azure sovereign clouds are not supported yet because crowline only validates portal.azure.com links."
+                    "Azure sovereign clouds are not supported yet because ratelline only validates portal.azure.com links."
                         .into(),
                 ),
                 cli_version: version,

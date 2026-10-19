@@ -36,7 +36,7 @@ const matrices = Object.freeze({
 const commonRequired = Object.freeze([
   "TAURI_SIGNING_PRIVATE_KEY",
   "TAURI_SIGNING_PRIVATE_KEY_PASSWORD",
-  "CROWLINE_UPDATER_PUBLIC_KEY",
+  "RATELLINE_UPDATER_PUBLIC_KEY",
 ]);
 
 const platformRequired = Object.freeze({

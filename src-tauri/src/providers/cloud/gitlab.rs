@@ -148,7 +148,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
             status: ConnectionStatus::Connected,
             account: Some(user.username),
             message: Some(
-                "GitLab.com deployments and CI pipelines are supported. Self-managed GitLab hosts are not auto-discovered because crowline cannot yet bind and validate a per-account host."
+                "GitLab.com deployments and CI pipelines are supported. Self-managed GitLab hosts are not auto-discovered because ratelline cannot yet bind and validate a per-account host."
                     .into(),
             ),
             cli_version: version,

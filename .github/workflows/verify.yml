@@ -72,6 +72,6 @@ jobs:
       - name: Upload desktop packages
         uses: actions/upload-artifact@v4
         with:
-          name: crowline-${{ matrix.name }}
+          name: ratelline-${{ matrix.name }}
           path: src-tauri/target/release/bundle/**
           if-no-files-found: error

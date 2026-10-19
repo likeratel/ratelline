@@ -204,7 +204,7 @@ fn map_releases(
             PROVIDER,
             &target.connection_id,
             Some(&target.id),
-            "Fly.io CLI fetches a fixed 25-release window and exposes no continuation cursor; crowline shows the latest 20.",
+            "Fly.io CLI fetches a fixed 25-release window and exposes no continuation cursor; ratelline shows the latest 20.",
         ));
     }
     Ok(ActivityPage {

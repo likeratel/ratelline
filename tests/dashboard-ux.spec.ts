@@ -19,7 +19,7 @@ test("omits workspace placeholders and keeps connection help compact", async ({
     0,
   );
   await page.screenshot({
-    path: "artifacts/crowline-dashboard-ux.png",
+    path: "artifacts/ratelline-dashboard-ux.png",
     fullPage: true,
   });
 
@@ -34,7 +34,7 @@ test("omits workspace placeholders and keeps connection help compact", async ({
   await expect(help.locator("summary")).toHaveText("CLI 설치·업데이트 안내");
   await help.locator("summary").click();
   await expect(help).toContainText("gh auth login");
-  await page.screenshot({ path: "artifacts/crowline-dialog-guide-full.png" });
+  await page.screenshot({ path: "artifacts/ratelline-dialog-guide-full.png" });
 });
 
 test("uses 36px dashboard controls and a custom select indicator", async ({
@@ -70,7 +70,7 @@ test("keeps a single scrollable settings page with reachable connection actions 
   await page.getByRole("button", { name: "설정", exact: true }).click();
 
   const connections = page.getByRole("tabpanel", { name: "서비스 연결" });
-  await page.screenshot({ path: "artifacts/crowline-dialog-guide.png" });
+  await page.screenshot({ path: "artifacts/ratelline-dialog-guide.png" });
 
   await expect(connections.locator(".provider-tabs")).toHaveCSS(
     "overflow-y",
@@ -104,7 +104,7 @@ test("keeps a single scrollable settings page with reachable connection actions 
       () => document.documentElement.scrollWidth <= window.innerWidth,
     ),
   ).toBe(true);
-  await page.screenshot({ path: "artifacts/crowline-dialog-short.png" });
+  await page.screenshot({ path: "artifacts/ratelline-dialog-short.png" });
 });
 
 test("collapses the empty active section and keeps recent rows readable", async ({

@@ -113,7 +113,7 @@ fn shared_client() -> Result<Arc<reqwest::Client>, HttpError> {
             .redirect(Policy::none())
             .connect_timeout(CONNECT_TIMEOUT)
             .timeout(REQUEST_TIMEOUT)
-            .user_agent("crowline/0.1")
+            .user_agent("ratelline/0.1")
             .build()
             .map_err(|_| HttpError::InvalidRequest)?,
     );

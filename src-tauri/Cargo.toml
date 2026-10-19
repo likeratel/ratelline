@@ -1,9 +1,9 @@
 [package]
-name = "crowline"
+name = "ratelline"
 version = "0.1.0"
 description = "Personal deployment monitoring for the menu bar and system tray"
 license = "MIT"
-repository = "https://github.com/likeratel/crowline"
+repository = "https://github.com/likeratel/ratelline"
 edition = "2021"
 rust-version = "1.95"
 
@@ -13,7 +13,7 @@ rust-version = "1.95"
 # The `_lib` suffix may seem redundant but it is necessary
 # to make the lib name unique and wouldn't conflict with the bin name.
 # This seems to be only an issue on Windows, see https://github.com/rust-lang/cargo/issues/8519
-name = "crowline_lib"
+name = "ratelline_lib"
 crate-type = ["staticlib", "cdylib", "rlib"]
 
 [build-dependencies]
@@ -22,7 +22,7 @@ tauri-build = { version = "2", features = [] }
 [dependencies]
 atomicwrites = "0.4"
 tempfile = "3"
-tauri = { version = "2", features = ["tray-icon"] }
+tauri = { version = "2", features = ["tray-icon", "image-png"] }
 tauri-plugin-opener = "2"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"

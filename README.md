@@ -1,14 +1,14 @@
-# crowline
+# ratelline
 
 English · [한국어](README.ko.md) · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
 
-[![Verify desktop builds](https://github.com/likeratel/crowline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/crowline/actions/workflows/verify.yml)
+[![Verify desktop builds](https://github.com/likeratel/ratelline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/ratelline/actions/workflows/verify.yml)
 
-<img src="public/crowline.png" alt="Three watchful crows sitting on a wire" width="160" />
+<img src="public/ratelline.png" alt="A honey badger patrolling a deploy line" width="160" />
 
-crowline is a menu-bar and system-tray app for deployment and CI status. Check recent runs at a glance, then open the dashboard to connect accounts, search history, and configure notifications. Built with Tauri 2, React, TypeScript, and Rust; service queries run on your computer. The interface follows your system language and supports English, Korean, Japanese, and Simplified Chinese.
+ratelline is a menu-bar and system-tray app that patrols your deploy lines: recent runs at a glance, with failures shown as plainly as successes. It is named after the ratel, the honey badger that does not back off from a few stings. Check deployment and CI status in the panel, then open the dashboard to connect accounts, search history, and configure notifications. Built with Tauri 2, React, TypeScript, and Rust; service queries run on your computer. The interface follows your system language and supports English, Korean, Japanese, and Simplified Chinese.
 
-**Download:** the signed and notarized macOS build (Apple Silicon and Intel) is on the [Releases page](https://github.com/likeratel/crowline/releases). No Windows installer is published yet.
+**Download:** the signed and notarized macOS build (Apple Silicon and Intel) is on the [Releases page](https://github.com/likeratel/ratelline/releases). No Windows installer is published yet.
 
 > **Verification status.** GitHub Actions, Vercel, and Bitbucket Cloud have been exercised with real accounts. Every other service is covered by command-contract tests against official CLI and API documentation using synthetic data, not by a live-account check. See [provider verification](docs/provider-verification.md) and the [2026-10-06 product review](docs/product-review-2026-10-06.md).
 
@@ -16,7 +16,7 @@ crowline is a menu-bar and system-tray app for deployment and CI status. Check r
 
 A quick tour: menu bar panel → deployment overview → service filter → connections → project notification rules.
 
-![Crowline demo: filter runs by service, open connections, and choose notifications for your runs](docs/images/walkthrough.gif)
+![Ratelline demo: filter runs by service, open connections, and choose notifications for your runs](docs/images/walkthrough.gif)
 
 Captured from the app’s browser preview with fictional projects and accounts. The demo uses the Korean UI; it does not show live deployments or notification delivery.
 
@@ -46,8 +46,8 @@ Captured from the app’s browser preview with fictional projects and accounts. 
 Node.js 22.23.3 or later, pnpm 10, and Rust stable are required. Install [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/) (Xcode Command Line Tools on macOS; Microsoft C++ Build Tools and WebView2 on Windows).
 
 ```sh
-git clone https://github.com/likeratel/crowline.git
-cd crowline
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
 pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
@@ -66,13 +66,13 @@ Open **Settings → Connections**, choose a service, connect an account, and sel
 
 Display scope inherits from the app default to the service and then the project. Set **My runs / All runs** per service or project in Connections; project choices take priority and apply to dashboard/history/menu bar. Notification rules are separate. Newly selected projects default to enabled **My runs · All results** rules while the master notification switch and existing rules remain unchanged. The notification switch pauses delivery without erasing project rules. Account aliases use explicit Save/Cancel and show saved confirmation. Bulk project selection uses one Select all/Clear all action for the current search. [Provider verification evidence](docs/provider-verification.md) separates command-contract tests from authenticated live checks.
 
-GitHub uses the installed `gh` CLI. Sign in with `gh auth login`, then select the CLI username for each connection. Vercel uses the installed `vercel` CLI and separate CLI configuration for additional accounts. No Crowline OAuth registration or GitHub/Vercel token form is needed. AWS reuses shared profiles; other supported CLI integrations reuse their existing sessions.
+GitHub uses the installed `gh` CLI. Sign in with `gh auth login`, then select the CLI username for each connection. Vercel uses the installed `vercel` CLI and separate CLI configuration for additional accounts. No Ratelline OAuth registration or GitHub/Vercel token form is needed. AWS reuses shared profiles; other supported CLI integrations reuse their existing sessions.
 
 Existing connection IDs, selected targets, aliases and notification rules are preserved. Reconnect API-era GitHub accounts to the matching CLI username and sign in to the corresponding Vercel CLI configuration. Bitbucket remains the token-authentication exception. See [authentication and provider access](docs/authentication.md).
 
 ## Supported monitoring
 
-crowline prefers installed official CLIs, retains AWS SDK shared-profile access and Bitbucket API-token access, and bundles no provider executable or Node runtime. It requires no deployment hooks or project instrumentation.
+ratelline prefers installed official CLIs, retains AWS SDK shared-profile access and Bitbucket API-token access, and bundles no provider executable or Node runtime. It requires no deployment hooks or project instrumentation.
 
 | Platform                                      | Monitoring                                     | Limits                                                                                                              |
 | --------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -108,16 +108,18 @@ Use the X beside an execution to hide just that row permanently across refresh a
 - **Menu-bar panel:** recent runs with platform icons, status, branch, actor, and a compact per-target query-health summary. Execution names appear when the service supplies them: GitHub workflows, Vercel deployments, Bitbucket custom pipelines, GitLab pipelines/jobs, and Cloud Build triggers. Duplicate names are shown once. Click outside or press `Esc` to dismiss.
 - **Dashboard:** filter by service, account, **My runs / All runs**, and local execution status; search and load older history where supported. Unknown actors appear in **All runs**. Status filters do not change saved display scope or notification rules. Open an execution's details to see collected context, the source-reported execution update time, and target query health.
 - **Notifications:** choose **Off / My runs / All runs** per project, then **All results / Success only / Failed only / Custom**. Notifications include service, result, execution name/title, project, branch, and actor. Long text may be shortened by the OS banner. Initial results after startup do not trigger historical alerts.
-- **Menu bar settings:** choose visible services/projects and 1–10 rows per section. Runs stay in newest-first order. On macOS, Command-drag the crow icon to change its position among other menu-bar apps.
+- **Menu bar settings:** choose visible services/projects and 1–10 rows per section. Runs stay in newest-first order. On macOS, Command-drag the ratel icon to change its position among other menu-bar apps.
 - **General:** language, launch at login, update preferences, and app version.
 
-Active runs remain visible after 24 hours and are labelled with their last observed state; this does not imply a failure. Vercel `BLOCKED` entries are hidden. Completed history supports 24-hour and 7-day views. crowline is read-only: it cannot deploy, rerun, cancel, or change infrastructure.
+Active runs remain visible after 24 hours and are labelled with their last observed state; this does not imply a failure. Vercel `BLOCKED` entries are hidden. Completed history supports 24-hour and 7-day views. ratelline is read-only: it cannot deploy, rerun, cancel, or change infrastructure.
 
 ## Updates, data, and limits
 
 Queries run roughly every 30 seconds while jobs are active and every 120 seconds while idle, with backoff after errors. The app shows query state and freshness per monitored project; an activity's provider-reported update time is separate from the local query time. On return to the foreground or network, stale or incomplete results can request a coalesced poll. Timeouts, partial results, and provider paging limits appear in the UI. Delayed results can miss notifications; use the service’s own history for a complete record.
 
-Settings and hidden execution keys live in `io.crowline.desktop/settings.json` under the OS application-data directory. Bitbucket tokens stay in the OS credential store. GitHub account-specific tokens are obtained through gh only for the matching subprocess and are not saved by Crowline. Provider credentials and executables are not bundled.
+Settings and hidden execution keys live in `io.ratelline.desktop/settings.json` under the OS application-data directory. Bitbucket tokens stay in the OS credential store. GitHub account-specific tokens are obtained through gh only for the matching subprocess and are not saved by Ratelline. Provider credentials and executables are not bundled.
+
+**Upgrading from crowline.** ratelline was previously named crowline. On first start, if the new `io.ratelline.desktop` data folder is empty, the app copies settings and account folders from `io.crowline.desktop`; the old folder is left in place and copy failures are logged without stopping startup. Bitbucket and Cloudflare tokens are read from the old `com.likeratel.crowline.*` credential entries on first use and saved under the new `com.likeratel.ratelline.*` names. macOS may ask once to allow ratelline to read the old Keychain item. Removing a connection deletes both the new and old entries. See [release engineering](docs/releases.md#upgrading-from-crowline).
 
 If settings cannot be read or a migration cannot be saved, the app preserves the original file and locks settings/account changes with a recovery notice. Restore a valid backup or the folder permissions, then restart the app. Readable settings and monitoring results remain available.
 
@@ -151,6 +153,6 @@ These are current repository commands; this README does not claim fixed test cou
 
 ## License
 
-crowline is available under the [MIT License](LICENSE). Current package and logo notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Crow icon provenance is in [brand notes](docs/brand.md).
+ratelline is available under the [MIT License](LICENSE). Current package and logo notices are in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md). Ratel icon provenance is in [brand notes](docs/brand.md).
 
-crowline is an independent project. It is not affiliated with, endorsed by, or sponsored by GitHub, Vercel, Amazon Web Services, Atlassian, Cloudflare, Google, Microsoft, or any other service it can monitor. Service names and logos are trademarks of their respective owners and are used only to identify the corresponding service.
+ratelline is an independent project. It is not affiliated with, endorsed by, or sponsored by GitHub, Vercel, Amazon Web Services, Atlassian, Cloudflare, Google, Microsoft, or any other service it can monitor. Service names and logos are trademarks of their respective owners and are used only to identify the corresponding service.

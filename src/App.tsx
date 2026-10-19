@@ -122,8 +122,8 @@ function Dashboard({ monitor }: { monitor: ReturnType<typeof useMonitor> }) {
   if (!snapshot)
     return (
       <main className="boot">
-        <img className="boot-logo" src="/crowline.png" alt="" />
-        <h1>crowline</h1>
+        <img className="boot-logo" src="/ratelline-mark.png" alt="" />
+        <h1>ratelline</h1>
         <p>{error ?? t("boot.checking")}</p>
         {error ? (
           <button className="button" onClick={() => void refresh()}>
@@ -220,9 +220,9 @@ function Dashboard({ monitor }: { monitor: ReturnType<typeof useMonitor> }) {
           }}
         >
           <span className="brand-mark">
-            <img src="/crowline.png" alt="" />
+            <img src="/ratelline-mark.png" alt="" />
           </span>
-          <span>crowline</span>
+          <span>ratelline</span>
         </a>
         <nav aria-label={t("nav.serviceFilter")}>
           <button

@@ -170,7 +170,7 @@ export function GeneralPreferences({ settings, error }: Props) {
             disabled={working}
             onClick={() =>
               void perform(() =>
-                bridge.open("https://github.com/likeratel/crowline/releases"),
+                bridge.open("https://github.com/likeratel/ratelline/releases"),
               )
             }
           >
@@ -185,7 +185,7 @@ export function GeneralPreferences({ settings, error }: Props) {
       )}
       <div className="preferences-about">
         <span>{c("about")}</span>
-        <strong>Crowline {APP_VERSION}</strong>
+        <strong>Ratelline {APP_VERSION}</strong>
       </div>
     </section>
   );

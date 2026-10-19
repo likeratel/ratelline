@@ -12,11 +12,11 @@ const en = {
   workersSummary:
     "Read Worker deployment records. Cloudflare Builds are a separate target type.",
   firebaseSummary:
-    "When connected, Crowline binds the current gcloud account—not the Firebase CLI login—to read Hosting releases and App Hosting rollouts.",
+    "When connected, Ratelline binds the current gcloud account—not the Firebase CLI login—to read Hosting releases and App Hosting rollouts.",
   easSummary:
     "Sign in with eas, then register a project to read builds and updates.",
   easHelp:
-    "Enter the project UUID, owner, and slug. Crowline reads without changing project files. Update failure history is unavailable.",
+    "Enter the project UUID, owner, and slug. Ratelline reads without changing project files. Update failure history is unavailable.",
   projectId: "EAS project UUID",
   owner: "Owner",
   slug: "Slug",
@@ -50,7 +50,7 @@ const ko: Record<keyof typeof en, string> = {
   easSummary:
     "eas에 로그인한 뒤 프로젝트를 등록하면 빌드와 업데이트를 조회할 수 있습니다.",
   easHelp:
-    "프로젝트 UUID, 소유자, slug를 입력하세요. Crowline은 프로젝트 파일을 변경하지 않고 조회합니다. 업데이트 실패 이력은 제공되지 않습니다.",
+    "프로젝트 UUID, 소유자, slug를 입력하세요. Ratelline은 프로젝트 파일을 변경하지 않고 조회합니다. 업데이트 실패 이력은 제공되지 않습니다.",
   projectId: "EAS 프로젝트 UUID",
   owner: "소유자",
   slug: "Slug",
@@ -84,7 +84,7 @@ const ja: Record<keyof typeof en, string> = {
   easSummary:
     "eas にログインしてからプロジェクトを登録すると、ビルドとアップデートを取得できます。",
   easHelp:
-    "プロジェクト UUID、owner、slug を入力してください。Crowline はプロジェクトファイルを変更せずに取得します。アップデートの失敗履歴は利用できません。",
+    "プロジェクト UUID、owner、slug を入力してください。Ratelline はプロジェクトファイルを変更せずに取得します。アップデートの失敗履歴は利用できません。",
   projectId: "EAS プロジェクト UUID",
   owner: "所有者",
   slug: "Slug",
@@ -116,7 +116,7 @@ const zhCN: Record<keyof typeof en, string> = {
     "连接时固定当前 gcloud 账户，并与 Firebase CLI 登录分开读取 Hosting 发布记录和 App Hosting 发布批次。",
   easSummary: "登录 eas 后注册项目，即可读取构建和更新。",
   easHelp:
-    "请输入项目 UUID、owner 和 slug。Crowline 在不更改项目文件的情况下查询。无法提供更新失败历史。",
+    "请输入项目 UUID、owner 和 slug。Ratelline 在不更改项目文件的情况下查询。无法提供更新失败历史。",
   projectId: "EAS 项目 UUID",
   owner: "所有者",
   slug: "Slug",

@@ -17,7 +17,7 @@ use tokio::{
 
 use crate::models::{Account, AccountMode, Provider};
 
-const GITHUB_KEYRING_NAMESPACE: &str = "CROWLINE_GH_KEYRING_NAMESPACE";
+const GITHUB_KEYRING_NAMESPACE: &str = "RATELLINE_GH_KEYRING_NAMESPACE";
 
 const COMMAND_TIMEOUT: Duration = Duration::from_secs(30);
 const LOGIN_TIMEOUT: Duration = Duration::from_secs(10 * 60);
@@ -518,7 +518,7 @@ impl CliError {
             }
             Self::TimedOut => format!("{provider} did not respond in time. Cached data is shown."),
             Self::OutputTooLarge => {
-                format!("{provider} returned more data than crowline can safely process.")
+                format!("{provider} returned more data than ratelline can safely process.")
             }
             Self::InvalidOutput => format!("{provider} returned an unsupported response."),
             Self::Failed => {
@@ -924,7 +924,7 @@ mod tests {
     #[tokio::test]
     async fn version_is_cached_across_concurrent_invocation_clones() {
         use std::os::unix::fs::PermissionsExt;
-        let root = std::env::temp_dir().join(format!("crowline-version-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!("ratelline-version-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("fake-cli");
         std::fs::write(
@@ -949,7 +949,7 @@ mod tests {
     #[tokio::test]
     async fn selected_github_user_uses_ephemeral_token_without_global_switch() {
         use std::os::unix::fs::PermissionsExt;
-        let root = std::env::temp_dir().join(format!("crowline-gh-user-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!("ratelline-gh-user-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("gh");
         std::fs::write(
@@ -1002,7 +1002,7 @@ printf '{}\n'
         }
 
         let root =
-            std::env::temp_dir().join(format!("crowline-gh-identity-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("ratelline-gh-identity-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("gh");
         std::fs::write(
@@ -1058,7 +1058,7 @@ printf '{}\n'
     async fn transient_identity_failure_is_not_cached() {
         use std::os::unix::fs::PermissionsExt;
         let root =
-            std::env::temp_dir().join(format!("crowline-identity-retry-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("ratelline-identity-retry-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("gh");
         std::fs::write(
@@ -1099,7 +1099,7 @@ printf '{"id":42,"login":"synthetic-user"}\n'
     #[tokio::test]
     async fn isolated_vercel_api_always_passes_config_and_explicit_scope() {
         use std::os::unix::fs::PermissionsExt;
-        let root = std::env::temp_dir().join(format!("crowline-vercel-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!("ratelline-vercel-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("vercel");
         std::fs::write(
@@ -1131,8 +1131,10 @@ printf '{"id":42,"login":"synthetic-user"}\n'
             cli.vercel_json("/v7/deployments", Some("team-scope")).await
         }
 
-        let root =
-            std::env::temp_dir().join(format!("crowline-vercel-identity-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!(
+            "ratelline-vercel-identity-{}",
+            uuid::Uuid::new_v4()
+        ));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("vercel");
         std::fs::write(
@@ -1242,8 +1244,10 @@ printf '1.2.3\n'
     #[tokio::test]
     async fn installed_cli_with_unrecognized_version_reports_compatibility_error() {
         use std::os::unix::fs::PermissionsExt;
-        let root =
-            std::env::temp_dir().join(format!("crowline-unknown-version-{}", uuid::Uuid::new_v4()));
+        let root = std::env::temp_dir().join(format!(
+            "ratelline-unknown-version-{}",
+            uuid::Uuid::new_v4()
+        ));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("fake-cli");
         std::fs::write(&script, "#!/bin/sh\nprintf 'development build\\n'\n").unwrap();
@@ -1273,7 +1277,7 @@ printf '1.2.3\n'
     async fn provider_version_subcommand_and_stderr_version_are_supported() {
         use std::os::unix::fs::PermissionsExt;
         let root =
-            std::env::temp_dir().join(format!("crowline-version-args-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("ratelline-version-args-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
 
         let doctl = root.join("doctl");
@@ -1326,7 +1330,7 @@ printf '1.2.3\n'
     async fn transient_version_probe_failure_does_not_disable_installed_cli() {
         use std::os::unix::fs::PermissionsExt;
         let root =
-            std::env::temp_dir().join(format!("crowline-version-retry-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("ratelline-version-retry-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("retry-cli");
         std::fs::write(
@@ -1357,7 +1361,8 @@ printf '1.2.3\n'
     #[tokio::test]
     async fn discovered_cli_receives_expanded_gui_path() {
         use std::os::unix::fs::PermissionsExt;
-        let root = std::env::temp_dir().join(format!("crowline-cli-path-{}", uuid::Uuid::new_v4()));
+        let root =
+            std::env::temp_dir().join(format!("ratelline-cli-path-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&root).unwrap();
         let script = root.join("path-cli");
         std::fs::write(&script, "#!/bin/sh\nprintf 'path-cli 1.0.0\\n'\n").unwrap();
@@ -1382,7 +1387,7 @@ printf '1.2.3\n'
     #[test]
     fn executable_discovery_uses_explicit_directory_order_and_aliases() {
         let root =
-            std::env::temp_dir().join(format!("crowline-discovery-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("ratelline-discovery-{}", uuid::Uuid::new_v4()));
         let first = root.join("first");
         let second = root.join("second");
         std::fs::create_dir_all(&first).unwrap();

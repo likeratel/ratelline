@@ -1,12 +1,12 @@
 # Product review and improvement pass — 2026-10-06
 
-Scope: preserve Crowline's read-only, local monitoring concept while completing the approved provider expansion and improving performance, reliability, and the path from connection to investigation. User acceptance remains separate from implementation and automated verification.
+Scope: preserve Ratelline's read-only, local monitoring concept while completing the approved provider expansion and improving performance, reliability, and the path from connection to investigation. User acceptance remains separate from implementation and automated verification.
 
 Status: implementation, automated verification, macOS debug build, and independent review are complete. The current native interaction smoke check was blocked by UI automation's inability to acquire the test window. User acceptance remains pending.
 
 ## Joint review
 
-At the user's request, Claude Code was started in a separate pane in the same Crowline workspace. It performed a read-only product review, discussed priorities and tradeoffs with Codex, and re-reviewed the resulting changes. Its code review did not use real provider credentials or execute provider queries. The native independent reviewer separately examined provider/authentication, refresh, and history changes. Reviewers were read-only by instruction, not by OS-enforced filesystem isolation.
+At the user's request, Claude Code was started in a separate pane in the same Ratelline workspace. It performed a read-only product review, discussed priorities and tradeoffs with Codex, and re-reviewed the resulting changes. Its code review did not use real provider credentials or execute provider queries. The native independent reviewer separately examined provider/authentication, refresh, and history changes. Reviewers were read-only by instruction, not by OS-enforced filesystem isolation.
 
 The agreed priorities were:
 
@@ -31,7 +31,7 @@ We rejected two shortcuts: a blanket 20-second retry policy for failed providers
 - `CARGO_INCREMENTAL=0 cargo test` passed all 278 tests. The first integrated run exposed three EAS fixture deadlines too short for concurrent subprocess startup; the fixture budgets were corrected without increasing production deadlines, and the full rerun passed.
 - After the final history-lock change, `CARGO_INCREMENTAL=0 cargo test state::` passed 76/76. `cargo fmt --check` and `CARGO_INCREMENTAL=0 cargo clippy --all-targets -- -D warnings` passed. The strict lint findings were expression/import cleanup and were independently re-reviewed.
 - Independent review found no remaining confirmed P1/P2 in the changed provider, authentication, refresh, history, startup, and tray paths. This is a scoped source/contract review, not a separate security audit or proof of live-provider compatibility.
-- `CARGO_INCREMENTAL=0 pnpm tauri build --debug --no-bundle --config /tmp/crowline-productcheck-config.json` passed on macOS Apple Silicon in 1m 02s. Its identifier was `io.crowline.productcheck.20261006`, with separate empty-account settings and automatic update checking disabled. The test build did not replace the installed Crowline app.
+- `CARGO_INCREMENTAL=0 pnpm tauri build --debug --no-bundle --config /tmp/ratelline-productcheck-config.json` passed on macOS Apple Silicon in 1m 02s. Its identifier was `io.ratelline.productcheck.20261006`, with separate empty-account settings and automatic update checking disabled. The test build did not replace the installed Ratelline app.
 
 ## Native and live-account limits
 

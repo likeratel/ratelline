@@ -31,9 +31,8 @@
   font-size: 14px;
 }
 .panel-brand img {
-  width: 30px;
-  height: 28px;
-  filter: grayscale(1) brightness(3);
+  width: 26px;
+  height: 26px;
   object-fit: contain;
 }
 .panel-actions {

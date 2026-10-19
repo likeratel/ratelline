@@ -14,7 +14,7 @@ on:
           - macos-and-windows
 
 concurrency:
-  group: crowline-release
+  group: ratelline-release
   cancel-in-progress: false
 
 permissions:
@@ -41,7 +41,7 @@ jobs:
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          CROWLINE_UPDATER_PUBLIC_KEY: ${{ vars.CROWLINE_UPDATER_PUBLIC_KEY }}
+          RATELLINE_UPDATER_PUBLIC_KEY: ${{ vars.RATELLINE_UPDATER_PUBLIC_KEY }}
           APPLE_CERTIFICATE: ${{ contains(inputs.release_scope, 'macos') && secrets.APPLE_CERTIFICATE || '' }}
           APPLE_CERTIFICATE_PASSWORD: ${{ contains(inputs.release_scope, 'macos') && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
           APPLE_SIGNING_IDENTITY: ${{ contains(inputs.release_scope, 'macos') && vars.APPLE_SIGNING_IDENTITY || '' }}
@@ -104,7 +104,7 @@ jobs:
           APPLE_API_PRIVATE_KEY: ${{ secrets.APPLE_API_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          key_path="$RUNNER_TEMP/crowline-notary-key.p8"
+          key_path="$RUNNER_TEMP/ratelline-notary-key.p8"
           umask 077
           printf '%s' "$APPLE_API_PRIVATE_KEY" > "$key_path"
           printf 'APPLE_API_KEY_PATH=%s\n' "$key_path" >> "$GITHUB_ENV"
@@ -118,7 +118,7 @@ jobs:
           WINDOWS_CERTIFICATE_THUMBPRINT: ${{ vars.WINDOWS_CERTIFICATE_THUMBPRINT }}
         run: |
           $ErrorActionPreference = 'Stop'
-          $certificatePath = Join-Path $env:RUNNER_TEMP 'crowline-code-signing.pfx'
+          $certificatePath = Join-Path $env:RUNNER_TEMP 'ratelline-code-signing.pfx'
           $expected = ($env:WINDOWS_CERTIFICATE_THUMBPRINT -replace '\s', '').ToUpperInvariant()
           try {
             $bytes = [Convert]::FromBase64String(($env:WINDOWS_CERTIFICATE -replace '\s', ''))
@@ -139,9 +139,9 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
           TAURI_SIGNING_PRIVATE_KEY_PASSWORD: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY_PASSWORD }}
-          CROWLINE_UPDATER_PUBLIC_KEY: ${{ vars.CROWLINE_UPDATER_PUBLIC_KEY }}
-          CROWLINE_RELEASE_PLATFORM: ${{ matrix.platform }}
-          CROWLINE_RELEASE_TARGET: ${{ matrix.target }}
+          RATELLINE_UPDATER_PUBLIC_KEY: ${{ vars.RATELLINE_UPDATER_PUBLIC_KEY }}
+          RATELLINE_RELEASE_PLATFORM: ${{ matrix.platform }}
+          RATELLINE_RELEASE_TARGET: ${{ matrix.target }}
           APPLE_CERTIFICATE: ${{ matrix.platform == 'macos' && secrets.APPLE_CERTIFICATE || '' }}
           APPLE_CERTIFICATE_PASSWORD: ${{ matrix.platform == 'macos' && secrets.APPLE_CERTIFICATE_PASSWORD || '' }}
           APPLE_SIGNING_IDENTITY: ${{ matrix.platform == 'macos' && vars.APPLE_SIGNING_IDENTITY || '' }}
@@ -153,7 +153,7 @@ jobs:
         with:
           tauriScript: bash scripts/release-build.sh
           tagName: v__VERSION__
-          releaseName: crowline v__VERSION__ validation draft
+          releaseName: ratelline v__VERSION__ validation draft
           releaseBody: >-
             Internal validation draft. Do not publish until every selected platform job and the
             release checklist pass. The GitHub updater URL is not a public update channel.

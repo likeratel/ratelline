@@ -138,7 +138,7 @@ async fn run_login(
             "--no-browser",
             "--use-device-code",
         ],
-        _ => return login_error(provider, &connection_id, "Sign in with this provider's official CLI, then use Connect and discover. No credentials are stored by crowline."),
+        _ => return login_error(provider, &connection_id, "Sign in with this provider's official CLI, then use Connect and discover. No credentials are stored by ratelline."),
     };
     let mut child = match invocation.login_command(&args).spawn() {
         Ok(child) => child,
@@ -201,7 +201,7 @@ pub(crate) fn validate_provider(provider: Provider) -> Result<(), String> {
     if matches!(provider, Provider::Vercel | Provider::Aws) {
         Ok(())
     } else {
-        Err("Sign in with this provider's official CLI outside crowline, then connect the existing session.".into())
+        Err("Sign in with this provider's official CLI outside ratelline, then connect the existing session.".into())
     }
 }
 

@@ -5,7 +5,7 @@ mod tray;
 
 fn test_directory(name: &str) -> std::path::PathBuf {
     std::env::temp_dir().join(format!(
-        "crowline-{name}-{}-{}",
+        "ratelline-{name}-{}-{}",
         std::process::id(),
         uuid::Uuid::new_v4()
     ))

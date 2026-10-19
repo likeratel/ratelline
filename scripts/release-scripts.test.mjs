@@ -21,7 +21,7 @@ const privateKey =
 const common = {
   TAURI_SIGNING_PRIVATE_KEY: "synthetic-updater-private-key",
   TAURI_SIGNING_PRIVATE_KEY_PASSWORD: "synthetic-password",
-  CROWLINE_UPDATER_PUBLIC_KEY: "synthetic-updater-public-key",
+  RATELLINE_UPDATER_PUBLIC_KEY: "synthetic-updater-public-key",
 };
 const mac = {
   ...common,
@@ -89,7 +89,7 @@ test("Windows release overlay enables updater and timestamped SHA-256 signing", 
 });
 
 test("version check requires one semantic version across all manifests", () => {
-  const root = mkdtempSync(join(tmpdir(), "crowline-release-version-"));
+  const root = mkdtempSync(join(tmpdir(), "ratelline-release-version-"));
   try {
     mkdirSync(join(root, "src-tauri"));
     writeFileSync(join(root, "package.json"), '{"version":"1.2.3"}');
@@ -113,17 +113,17 @@ test("version check requires one semantic version across all manifests", () => {
 });
 
 test("artifact discovery does not descend into app bundles", () => {
-  const root = mkdtempSync(join(tmpdir(), "crowline-release-artifacts-"));
+  const root = mkdtempSync(join(tmpdir(), "ratelline-release-artifacts-"));
   try {
-    mkdirSync(join(root, "macos", "crowline.app", "Contents"), {
+    mkdirSync(join(root, "macos", "ratelline.app", "Contents"), {
       recursive: true,
     });
     mkdirSync(join(root, "dmg"), { recursive: true });
     mkdirSync(join(root, "nsis"), { recursive: true });
-    writeFileSync(join(root, "dmg", "crowline.dmg"), "synthetic");
-    writeFileSync(join(root, "nsis", "crowline-setup.exe"), "synthetic");
+    writeFileSync(join(root, "dmg", "ratelline.dmg"), "synthetic");
+    writeFileSync(join(root, "nsis", "ratelline-setup.exe"), "synthetic");
     writeFileSync(
-      join(root, "macos", "crowline.app", "Contents", "nested.exe"),
+      join(root, "macos", "ratelline.app", "Contents", "nested.exe"),
       "synthetic",
     );
     const artifacts = findReleaseArtifacts(root);

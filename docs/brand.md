@@ -1,16 +1,22 @@
-# crowline 심볼
+# ratelline 심볼
 
-줄 위에 모여 앉아 실행 상태를 지켜보는 까마귀 세 마리입니다. 가운데 까마귀를 조금 크게 배치하고, 짙은 녹색 몸과 밝은 눈으로 시선을 표현했습니다.
+배포 라인 위를 겁 없이 걸어가는 벌꿀오소리(ratel)입니다. 벌꿀오소리는 벌에 몇 번 쏘여도 물러서지 않는 동물로 알려져 있습니다. ratelline도 실패한 배포를 숨기지 않고 성공과 똑같이 바로 보여 주는 메뉴바 감시자라는 뜻을 담았습니다. 라텔이 밟고 지나가는 꿀색 선은 배포 라인이고, 끝의 점은 가장 최근 실행을 나타냅니다.
 
-- 원본: `public/crowline.png` (투명 PNG)
-- 앱 아이콘: `src-tauri/icons/` (Tauri icon 명령으로 플랫폼별 크기 생성)
+- 히어로 이미지: `public/ratelline.png` (투명 배경 PNG, README·앱 화면 로고)
+- 앱 아이콘 원본: `src-tauri/icons/source-1024.png` (어두운 둥근 사각형 위의 라텔)
+- 앱 아이콘: `src-tauri/icons/` (Tauri icon 명령으로 원본에서 플랫폼별 크기 생성)
+- macOS 메뉴바 글리프: `src-tauri/icons/tray.png`(22px), `tray@2x.png`(44px). 검정과 알파만 쓰는 템플릿 이미지라 macOS가 메뉴바 밝기에 맞춰 색을 바꿉니다. Windows와 Linux 트레이는 앱 아이콘을 그대로 씁니다.
 - 제작 도구: 기본 내장 image_gen
-- 이름 표기: 소문자 `crowline`
+- 이름 표기: 소문자 `ratelline`
 
-이 저장소에는 위 생성 결과와 그 결과에서 만든 앱 아이콘만 기록되어 있습니다. 별도의 스톡 이미지·다운로드한 그래픽 출처는 기록되어 있지 않습니다. 이 기록은 자산 제작 경위를 남기는 것이며, 외부 도구·모델·학습 데이터에 관한 권리 보증은 아닙니다.
+## 색
 
-사용한 생성 프롬프트:
+| 이름   | 값        | 쓰임                     |
+| ------ | --------- | ------------------------ |
+| 검정   | `#141414` | 몸통, 아이콘 배경 계열   |
+| 회백   | `#D9D4C6` | 등의 망토 무늬           |
+| 꿀색   | `#E39B12` | 배포 라인, 눈, 강조 점   |
 
-```text
-Use case: logo-brand. Asset type: final symbol for crowline, a desktop deployment-monitoring app. Primary request: a small group of crows sitting together on a single horizontal wire and looking toward the viewer. Draw exactly three distinctly crow-like birds, a slightly taller middle crow, compact bodies, clear strong crow beaks, subtle quirky attentive expressions and tiny light eyes. Minimal confident flat silhouette, sophisticated friendly developer-tool brand, crisp vector-like shapes and generous negative space. All three sit on the same straight line with small feet; short tail shapes below wire. Palette: near-black deep forest green #203A30, with only transparent cutouts for eyes. True transparent background. Square 1024 canvas, symbol centered and occupying 75% width, 55% height. No text, letters, gradients, texture, shadows, frame, badge, environment or additional objects. Must read clearly at small sizes and feel like watchful crows rather than owls.
-```
+이 저장소에는 위 생성 결과와 그 결과에서 만든 앱 아이콘만 기록되어 있습니다. 새 심볼의 생성 프롬프트는 이 저장소에 기록되어 있지 않습니다. 별도의 스톡 이미지·다운로드한 그래픽 출처도 기록되어 있지 않습니다. 이 기록은 자산 제작 경위를 남기는 것이며, 외부 도구·모델·학습 데이터에 관한 권리 보증은 아닙니다.
+
+이전 이름 `crowline` 시절에는 줄 위에 앉은 까마귀 세 마리를 심볼로 썼습니다.

@@ -58,10 +58,10 @@ const messages = {
     "启动与更新",
   ],
   autostart: [
-    "로그인할 때 Crowline 실행",
-    "Launch Crowline at login",
-    "ログイン時にCrowlineを起動",
-    "登录时启动 Crowline",
+    "로그인할 때 Ratelline 실행",
+    "Launch Ratelline at login",
+    "ログイン時にRatellineを起動",
+    "登录时启动 Ratelline",
   ],
   appliedImmediately: [
     "자동 실행 설정은 바로 적용됩니다.",
@@ -144,10 +144,10 @@ const messages = {
     "已允许通知。",
   ],
   denied: [
-    "알림이 차단되어 있습니다. 시스템 설정에서 Crowline 알림을 허용해 주세요.",
-    "Notifications are blocked. Allow Crowline notifications in system settings.",
-    "通知が無効です。システム設定でCrowlineの通知を許可してください。",
-    "通知已被禁用，请在系统设置中允许 Crowline 发送通知。",
+    "알림이 차단되어 있습니다. 시스템 설정에서 Ratelline 알림을 허용해 주세요.",
+    "Notifications are blocked. Allow Ratelline notifications in system settings.",
+    "通知が無効です。システム設定でRatellineの通知を許可してください。",
+    "通知已被禁用，请在系统设置中允许 Ratelline 发送通知。",
   ],
   prompt: [
     "알림을 받으려면 시스템 권한이 필요합니다.",

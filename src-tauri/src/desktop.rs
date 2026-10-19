@@ -2,6 +2,7 @@ use std::{ffi::OsStr, sync::Mutex as StdMutex};
 
 use serde::Serialize;
 use tauri::{
+    image::Image,
     menu::{Menu, MenuItem},
     tray::{MouseButton, MouseButtonState, TrayIconBuilder, TrayIconEvent},
     App, AppHandle, Emitter, Listener, Manager,
@@ -20,7 +21,7 @@ use crate::{
 
 const AUTOSTART_ARGUMENT: &str = "--autostart";
 const UPDATE_ENDPOINT: &str =
-    "https://github.com/likeratel/crowline/releases/latest/download/latest.json";
+    "https://github.com/likeratel/ratelline/releases/latest/download/latest.json";
 const MENU_OPEN: &str = "show-panel";
 const MENU_DASHBOARD: &str = "open-dashboard";
 const MENU_REFRESH: &str = "refresh";
@@ -157,7 +158,7 @@ pub(crate) fn start_tray_language_sync(app: AppHandle) {
 pub(crate) fn build_tray(app: &App, language: Language) -> tauri::Result<()> {
     let menu = localized_menu(app, language)?;
     let mut tray = TrayIconBuilder::with_id(TRAY_ID)
-        .tooltip("crowline")
+        .tooltip("ratelline")
         .menu(&menu)
         .icon_as_template(true)
         .show_menu_on_left_click(false)
@@ -178,11 +179,34 @@ pub(crate) fn build_tray(app: &App, language: Language) -> tauri::Result<()> {
             TrayIconEvent::Leave { .. } => windows::cancel_tray_panel_click(tray.app_handle()),
             _ => {}
         });
-    if let Some(icon) = app.default_window_icon() {
-        tray = tray.icon(icon.clone());
+    if let Some(icon) = tray_icon(app)? {
+        tray = tray.icon(icon);
     }
     tray.build(app)?;
     Ok(())
+}
+
+/// macOS menu-bar glyph: black with alpha, rendered as a template image at the
+/// 22pt menu-bar height (44px for Retina displays).
+#[cfg(target_os = "macos")]
+const MENU_BAR_TEMPLATE_ICON: &[u8] = include_bytes!("../icons/tray@2x.png");
+
+/// The full-color app icon is a dark square that would render as a solid
+/// block when used as a macOS template image, so macOS uses a dedicated glyph.
+/// Other platforms keep the app icon because a black glyph is unreadable on
+/// dark Windows and Linux trays.
+fn tray_icon(app: &App) -> tauri::Result<Option<Image<'static>>> {
+    #[cfg(target_os = "macos")]
+    {
+        let _ = app;
+        Image::from_bytes(MENU_BAR_TEMPLATE_ICON).map(Some)
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        Ok(app
+            .default_window_icon()
+            .map(|icon| icon.clone().to_owned()))
+    }
 }
 
 /// Rebuilds the native tray menu after `Settings.preferences.language` changes.
@@ -359,13 +383,13 @@ fn validate_install_approval(
 
 fn require_updater_public_key() -> Result<&'static str, String> {
     updater_public_key().ok_or_else(|| {
-        "Updates are not configured in this build. Set CROWLINE_UPDATER_PUBLIC_KEY when building the application."
+        "Updates are not configured in this build. Set RATELLINE_UPDATER_PUBLIC_KEY when building the application."
             .to_owned()
     })
 }
 
 fn updater_public_key() -> Option<&'static str> {
-    option_env!("CROWLINE_UPDATER_PUBLIC_KEY")
+    option_env!("RATELLINE_UPDATER_PUBLIC_KEY")
         .map(str::trim)
         .filter(|value| !value.is_empty())
 }
@@ -474,6 +498,18 @@ impl TrayLabels {
 
 #[cfg(test)]
 mod tests {
+    #[cfg(target_os = "macos")]
+    #[test]
+    fn menu_bar_icon_is_a_retina_template_glyph() {
+        let icon = super::Image::from_bytes(super::MENU_BAR_TEMPLATE_ICON).unwrap();
+        assert_eq!((icon.width(), icon.height()), (44, 44));
+        let (pixels, _) = icon.rgba().as_chunks::<4>();
+        assert!(pixels
+            .iter()
+            .all(|pixel| pixel[3] == 0 || pixel[..3] == [0, 0, 0]));
+        assert!(pixels.iter().any(|pixel| pixel[3] > 0));
+    }
+
     #[test]
     fn bundled_updater_configuration_deserializes_without_a_signing_key() {
         let config: serde_json::Value =
@@ -497,9 +533,9 @@ mod tests {
 
     #[test]
     fn detects_only_the_exact_autostart_argument() {
-        assert!(has_autostart_argument(["crowline", "--autostart"]));
-        assert!(!has_autostart_argument(["crowline", "--autostart=true"]));
-        assert!(!has_autostart_argument(["crowline"]));
+        assert!(has_autostart_argument(["ratelline", "--autostart"]));
+        assert!(!has_autostart_argument(["ratelline", "--autostart=true"]));
+        assert!(!has_autostart_argument(["ratelline"]));
     }
 
     #[test]
@@ -509,7 +545,7 @@ mod tests {
         assert_eq!(endpoint.host_str(), Some("github.com"));
         assert_eq!(
             endpoint.path(),
-            "/likeratel/crowline/releases/latest/download/latest.json"
+            "/likeratel/ratelline/releases/latest/download/latest.json"
         );
     }
 

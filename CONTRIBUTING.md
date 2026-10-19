@@ -1,11 +1,11 @@
 # Contributing
 
-Thanks for your interest in crowline. It is a small, read-only deployment monitor, so contributions are
+Thanks for your interest in ratelline. It is a small, read-only deployment monitor, so contributions are
 expected to stay inside that scope.
 
 ## Ground rules
 
-- crowline only reads status. Do not add commands that redeploy, cancel, roll back, or change
+- ratelline only reads status. Do not add commands that redeploy, cancel, roll back, or change
   provider configuration.
 - Never commit tokens, personal accounts, or real provider responses. Tests and fixtures use fictional
   organizations, users, projects, and identifiers only.

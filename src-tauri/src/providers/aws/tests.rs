@@ -123,7 +123,7 @@ fn parses_only_profile_sections_from_shared_config() {
         profile_section("[default]", true).as_deref(),
         Some("default")
     );
-    assert_eq!(profile_section("[sso-session crowline]", true), None);
+    assert_eq!(profile_section("[sso-session ratelline]", true), None);
     assert_eq!(
         profile_section("[production]", false).as_deref(),
         Some("production")

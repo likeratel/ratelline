@@ -1,14 +1,14 @@
-# crowline
+# ratelline
 
 [English](README.md) · 한국어 · [日本語](README.ja.md) · [简体中文](README.zh-CN.md)
 
-[![Verify desktop builds](https://github.com/likeratel/crowline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/crowline/actions/workflows/verify.yml)
+[![Verify desktop builds](https://github.com/likeratel/ratelline/actions/workflows/verify.yml/badge.svg)](https://github.com/likeratel/ratelline/actions/workflows/verify.yml)
 
-<img src="public/crowline.png" alt="줄 위에서 바라보는 세 마리 까마귀" width="160" />
+<img src="public/ratelline.png" alt="배포 라인을 순찰하는 벌꿀오소리" width="160" />
 
-crowline은 배포와 CI 실행 상태를 확인하는 메뉴 막대·시스템 트레이 앱입니다. 패널에서 최근 실행을 빠르게 확인하고, 대시보드에서 계정 연결·이력 검색·알림을 설정합니다. Tauri 2, React, TypeScript, Rust로 만들었으며 서비스 조회는 사용자 컴퓨터에서 실행됩니다. 언어는 시스템 설정을 따르고 한국어·영어·일본어·중국어 간체를 지원합니다.
+ratelline은 배포 라인을 겁 없이 순찰하는 메뉴 막대·시스템 트레이 감시자입니다. 이름은 벌에 몇 번 쏘여도 물러서지 않는 벌꿀오소리(ratel)에서 따왔습니다. 실패한 배포를 숨기지 않고 성공과 똑같이 바로 보여 줍니다. 패널에서 최근 실행을 빠르게 확인하고, 대시보드에서 계정 연결·이력 검색·알림을 설정합니다. Tauri 2, React, TypeScript, Rust로 만들었으며 서비스 조회는 사용자 컴퓨터에서 실행됩니다. 언어는 시스템 설정을 따르고 한국어·영어·일본어·중국어 간체를 지원합니다.
 
-**다운로드:** 서명·공증된 macOS 빌드(Apple Silicon·Intel)는 [Releases 페이지](https://github.com/likeratel/crowline/releases)에 있습니다. Windows 설치 파일은 아직 공개하지 않았습니다.
+**다운로드:** 서명·공증된 macOS 빌드(Apple Silicon·Intel)는 [Releases 페이지](https://github.com/likeratel/ratelline/releases)에 있습니다. Windows 설치 파일은 아직 공개하지 않았습니다.
 
 > **검증 범위.** GitHub Actions, Vercel, Bitbucket Cloud는 실제 계정으로 동작을 확인했습니다. 나머지 서비스는 공식 CLI·API 문서를 기준으로 가상 데이터를 사용한 명령 계약 테스트만 거쳤고, 실계정 검증은 하지 않았습니다. [서비스 검증 기록](docs/provider-verification.md)과 [2026-10-06 제품 리뷰](docs/product-review-2026-10-06.md)를 참고하세요.
 
@@ -46,8 +46,8 @@ crowline은 배포와 CI 실행 상태를 확인하는 메뉴 막대·시스템 
 Node.js 22.23.3 이상, pnpm 10, Rust stable이 필요합니다. macOS에는 Xcode Command Line Tools, Windows에는 Microsoft C++ Build Tools와 WebView2 등 [Tauri 필수 도구](https://v2.tauri.app/start/prerequisites/)를 준비합니다.
 
 ```sh
-git clone https://github.com/likeratel/crowline.git
-cd crowline
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
 pnpm install --frozen-lockfile
 pnpm tauri dev
 ```
@@ -66,13 +66,13 @@ pnpm desktop:build
 
 화면 표시 범위는 **앱 기본값 → 서비스 → 프로젝트** 순으로 적용하며 프로젝트 설정이 우선합니다. 서비스 연결에서 서비스·프로젝트별 **내 실행 / 전체 실행**을 선택하면 대시보드·이력·메뉴 막대에 함께 적용됩니다. 알림 규칙은 별도입니다. 새로 선택한 프로젝트는 **내 실행 · 모든 결과** 알림 규칙이 켜진 상태로 추가하며, 기존 규칙과 전체 알림 토글 값은 바꾸지 않습니다. 알림 토글을 끄면 프로젝트 규칙을 보존한 채 전송만 중지합니다. 전체 선택 버튼은 선택 상태에 따라 전체 해제로 바뀌며 현재 검색 결과에만 적용합니다. [서비스 검증 근거](docs/provider-verification.md)는 명령 계약 테스트와 실계정 조회를 구분합니다.
 
-GitHub는 설치된 `gh` CLI를 사용합니다. `gh auth login`으로 로그인한 뒤 연결마다 CLI 사용자 계정을 선택하세요. Vercel은 설치된 `vercel` CLI를 사용하고 추가 계정의 CLI 설정을 분리합니다. Crowline OAuth 등록이나 GitHub·Vercel 토큰 입력은 필요 없습니다. AWS는 공유 프로필을, 나머지 CLI 지원 서비스는 기존 로그인 세션을 재사용합니다.
+GitHub는 설치된 `gh` CLI를 사용합니다. `gh auth login`으로 로그인한 뒤 연결마다 CLI 사용자 계정을 선택하세요. Vercel은 설치된 `vercel` CLI를 사용하고 추가 계정의 CLI 설정을 분리합니다. Ratelline OAuth 등록이나 GitHub·Vercel 토큰 입력은 필요 없습니다. AWS는 공유 프로필을, 나머지 CLI 지원 서비스는 기존 로그인 세션을 재사용합니다.
 
 기존 연결 ID·대상 선택·별칭·알림 규칙은 유지합니다. API 방식으로 연결했던 GitHub는 같은 CLI 사용자로 다시 연결하고, Vercel은 해당 CLI 설정으로 다시 로그인하세요. Bitbucket은 토큰 인증을 유지합니다. 자세한 내용은 [인증과 서비스 접근](docs/authentication.md)을 참고하세요.
 
 ## 지원 범위
 
-crowline은 설치된 공식 CLI를 우선 사용하며, AWS SDK 공유 프로필과 Bitbucket API 토큰 연결을 유지합니다. 서비스 실행 파일이나 Node 런타임을 동봉하지 않으며 배포 hook이나 프로젝트 코드 수정이 필요 없습니다.
+ratelline은 설치된 공식 CLI를 우선 사용하며, AWS SDK 공유 프로필과 Bitbucket API 토큰 연결을 유지합니다. 서비스 실행 파일이나 Node 런타임을 동봉하지 않으며 배포 hook이나 프로젝트 코드 수정이 필요 없습니다.
 
 | 플랫폼                            | 조회                         | 제한                                                                            |
 | --------------------------------- | ---------------------------- | ------------------------------------------------------------------------------- |
@@ -108,16 +108,18 @@ Cloudflare 토큰은 OS 자격 증명 저장소에 보관합니다. Pages에는 
 - **메뉴 막대 패널:** 플랫폼 아이콘, 상태, 브랜치, 실행자와 대상별 조회 상태 요약을 표시합니다. GitHub 워크플로, Vercel 배포, Bitbucket 커스텀 파이프라인, GitLab 파이프라인·작업, Cloud Build 트리거 이름도 제공되는 경우 함께 표시합니다. 같은 이름은 한 번만 표시하며 바깥 클릭이나 `Esc`로 닫습니다.
 - **대시보드:** 서비스·계정·**내 실행만 / 전체 실행**·화면 안의 실행 상태로 필터링하고 이력을 검색합니다. 서비스가 지원하면 이전 이력을 더 불러올 수 있습니다. 실행자 미확인 항목은 **전체 실행**에서 확인합니다. 상태 필터는 저장된 표시 범위나 알림 규칙을 바꾸지 않습니다. 실행 상세에서 수집된 맥락, 서비스가 전달한 실행 갱신 시각과 대상 조회 상태를 확인할 수 있습니다.
 - **알림:** 프로젝트별로 **끔 / 내 실행 / 전체 실행**을 고르고 **모든 결과 / 성공만 / 실패만 / 직접 설정**을 선택합니다. 알림에는 서비스, 결과, 실행 이름·제목, 프로젝트, 브랜치, 실행자를 포함합니다. 긴 내용은 OS 배너에서 잘릴 수 있습니다. 앱을 켠 직후의 과거 결과는 알리지 않습니다.
-- **메뉴 막대 설정:** 표시할 서비스·프로젝트와 영역별 1~10개 행을 선택합니다. 실행은 항상 최신순입니다. macOS에서 다른 앱 아이콘 사이의 위치는 Command 키를 누른 채 까마귀 아이콘을 드래그해 바꿉니다.
+- **메뉴 막대 설정:** 표시할 서비스·프로젝트와 영역별 1~10개 행을 선택합니다. 실행은 항상 최신순입니다. macOS에서 다른 앱 아이콘 사이의 위치는 Command 키를 누른 채 라텔 아이콘을 드래그해 바꿉니다.
 - **일반:** 언어, 로그인 시 실행, 업데이트 확인, 앱 버전을 관리합니다.
 
-진행 항목은 24시간이 지나도 마지막 관측 상태와 함께 표시하며, 이것이 실패를 뜻하지는 않습니다. Vercel `BLOCKED`는 숨깁니다. 완료 이력은 최근 24시간 또는 7일로 조회합니다. crowline은 조회 전용으로 배포·재실행·취소·인프라 변경을 하지 않습니다.
+진행 항목은 24시간이 지나도 마지막 관측 상태와 함께 표시하며, 이것이 실패를 뜻하지는 않습니다. Vercel `BLOCKED`는 숨깁니다. 완료 이력은 최근 24시간 또는 7일로 조회합니다. ratelline은 조회 전용으로 배포·재실행·취소·인프라 변경을 하지 않습니다.
 
 ## 업데이트, 데이터, 한계
 
 실행 중인 작업이 있으면 약 30초, 없으면 약 120초마다 조회하며 오류가 나면 간격을 늘립니다. 앱은 모니터링 대상별 조회 상태와 최신성을 표시하며, 서비스가 전달한 실행 갱신 시각은 로컬 조회 시각과 다릅니다. 화면 복귀나 네트워크 복구 시 오래되거나 불완전한 결과는 합쳐진 재조회 요청을 보낼 수 있습니다. 시간 초과, 일부 조회 실패, 서비스별 페이지 제한은 화면에 표시합니다. 늦게 조회된 결과는 알림에서 빠질 수 있으므로 전체 기록은 해당 서비스에서 확인하세요.
 
-설정과 숨긴 실행 기록은 OS 앱 데이터 디렉터리의 `io.crowline.desktop/settings.json`에 저장합니다. Bitbucket 토큰은 OS 보안 저장소에 보관합니다. GitHub 계정별 토큰은 gh를 통해 해당 조회 프로세스에서만 사용하며 Crowline이 저장하지 않습니다. 인증 정보나 서비스 실행 파일은 설치 파일에 포함하지 않습니다.
+설정과 숨긴 실행 기록은 OS 앱 데이터 디렉터리의 `io.ratelline.desktop/settings.json`에 저장합니다. Bitbucket 토큰은 OS 보안 저장소에 보관합니다. GitHub 계정별 토큰은 gh를 통해 해당 조회 프로세스에서만 사용하며 Ratelline이 저장하지 않습니다. 인증 정보나 서비스 실행 파일은 설치 파일에 포함하지 않습니다.
+
+**crowline에서 업그레이드:** ratelline의 이전 이름은 crowline입니다. 처음 실행할 때 새 데이터 폴더 `io.ratelline.desktop`이 비어 있으면 `io.crowline.desktop`의 설정과 계정 폴더를 복사합니다. 이전 폴더는 지우지 않으며, 복사 실패는 로그에 남기고 실행을 계속합니다. Bitbucket·Cloudflare 토큰은 처음 사용할 때 이전 보안 저장소 항목(`com.likeratel.crowline.*`)에서 읽어 새 이름(`com.likeratel.ratelline.*`)으로 저장합니다. macOS가 이전 키체인 항목 접근 허용을 한 번 물을 수 있습니다. 연결을 삭제하면 새 항목과 이전 항목을 함께 지웁니다. 자세한 내용은 [릴리스 문서](docs/releases.md#upgrading-from-crowline)를 참고하세요.
 
 설정 파일을 읽거나 변환한 내용을 저장하지 못하면 원본 보존을 위해 설정·계정 변경을 잠그고 복구 안내를 표시합니다. 유효한 백업 파일이나 폴더 권한을 복구한 뒤 앱을 재시작하세요. 읽을 수 있는 설정과 모니터링 결과는 계속 표시합니다.
 
@@ -151,6 +153,6 @@ cargo clippy --all-targets -- -D warnings
 
 ## 라이선스
 
-crowline은 [MIT License](LICENSE)로 제공합니다. 현재 패키지와 로고 고지는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 있습니다. 까마귀 아이콘 출처는 [브랜드 노트](docs/brand.md)에 기록했습니다.
+ratelline은 [MIT License](LICENSE)로 제공합니다. 현재 패키지와 로고 고지는 [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md)에 있습니다. 라텔 아이콘 출처는 [브랜드 노트](docs/brand.md)에 기록했습니다.
 
-crowline은 독립 프로젝트입니다. GitHub, Vercel, Amazon Web Services, Atlassian, Cloudflare, Google, Microsoft 등 모니터링 대상 서비스와 제휴·보증·후원 관계가 없습니다. 서비스 이름과 로고는 각 소유자의 상표이며 해당 서비스를 식별하는 용도로만 사용합니다.
+ratelline은 독립 프로젝트입니다. GitHub, Vercel, Amazon Web Services, Atlassian, Cloudflare, Google, Microsoft 등 모니터링 대상 서비스와 제휴·보증·후원 관계가 없습니다. 서비스 이름과 로고는 각 소유자의 상표이며 해당 서비스를 식별하는 용도로만 사용합니다.

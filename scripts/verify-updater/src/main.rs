@@ -53,8 +53,8 @@ fn verify_directory(key: &PublicKey, directory: &Path) -> Result<usize, &'static
 }
 
 fn run() -> Result<(), &'static str> {
-    let value = env::var("CROWLINE_UPDATER_PUBLIC_KEY")
-        .map_err(|_| "CROWLINE_UPDATER_PUBLIC_KEY is required.")?;
+    let value = env::var("RATELLINE_UPDATER_PUBLIC_KEY")
+        .map_err(|_| "RATELLINE_UPDATER_PUBLIC_KEY is required.")?;
     let key = public_key(&value)?;
     let arguments: Vec<_> = env::args_os().skip(1).collect();
     if arguments.len() != 1 {
@@ -96,7 +96,7 @@ mod tests {
 
     #[test]
     fn scans_nested_artifacts_and_rejects_orphan_signatures() {
-        let directory = env::temp_dir().join(format!("crowline-verifier-{}", std::process::id()));
+        let directory = env::temp_dir().join(format!("ratelline-verifier-{}", std::process::id()));
         fs::create_dir(&directory).unwrap();
         let key = public_key(&STANDARD.encode(KEY)).unwrap();
         assert_eq!(verify_directory(&key, &directory).unwrap(), 0);

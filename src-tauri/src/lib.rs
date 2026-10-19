@@ -3,6 +3,8 @@ mod cloudflare_credentials;
 mod commands;
 mod credentials;
 mod desktop;
+mod legacy_keyring;
+mod legacy_migration;
 mod login;
 pub mod models;
 mod notifications;
@@ -31,6 +33,7 @@ pub fn run() {
             #[cfg(target_os = "macos")]
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let app_data_dir = app.path().app_data_dir()?;
+            legacy_migration::migrate_app_data_dir(&app_data_dir);
             let resource_dir = app.path().resource_dir().ok();
             let state = tauri::async_runtime::block_on(AppState::initialize(
                 app_data_dir,
@@ -100,7 +103,7 @@ pub fn run() {
             desktop::install_update,
         ])
         .build(tauri::generate_context!())
-        .expect("crowline failed to build")
+        .expect("ratelline failed to build")
         .run(move |app, event| match event {
             RunEvent::Ready if !launched_by_autostart => windows::show_panel(app, None),
             #[cfg(target_os = "macos")]

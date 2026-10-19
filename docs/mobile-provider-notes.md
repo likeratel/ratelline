@@ -1,6 +1,6 @@
 # Mobile provider capability notes
 
-Investigation baseline: 2026-09-30; updated expansion decision: 2026-10-06. These are crowline integration constraints, not claims that the platforms have no APIs. Current supported integrations are listed in the [README](../README.md#supported-monitoring).
+Investigation baseline: 2026-09-30; updated expansion decision: 2026-10-06. These are ratelline integration constraints, not claims that the platforms have no APIs. Current supported integrations are listed in the [README](../README.md#supported-monitoring).
 
 This investigation covers EAS/Expo, Firebase Hosting and App Hosting, Supabase Edge Functions, and fastlane. The implementation reuses installed local CLI sessions and performs read-only probes only. It does not extract tokens, evaluate a user's project configuration, run project scripts, or turn a current resource state into invented deployment history.
 
@@ -48,13 +48,13 @@ The service APIs do provide the required data:
 - [Firebase Hosting `sites.releases.list`](https://firebase.google.com/docs/reference/hosting/rest/v1beta1/sites.releases/list) returns releases with `pageToken` pagination and read-only OAuth scopes.
 - [Firebase App Hosting `rollouts.list`](https://firebase.google.com/docs/reference/apphosting/rest/v1/projects.locations.backends.rollouts/list) returns rollout state, timestamps, and `nextPageToken` pagination.
 
-Using these APIs directly requires a short-lived Google access token. Crowline obtains it from installed `gcloud` for the already selected account and keeps it only in the backend process. The standard Firebase CLI does not offer a generic authenticated GET command, and extracting its stored refresh token remains outside the trust boundary. Synthetic fixtures and browser checks passed; live-account verification was not performed. See the [verification record](product-review-2026-10-06.md).
+Using these APIs directly requires a short-lived Google access token. Ratelline obtains it from installed `gcloud` for the already selected account and keeps it only in the backend process. The standard Firebase CLI does not offer a generic authenticated GET command, and extracting its stored refresh token remains outside the trust boundary. Synthetic fixtures and browser checks passed; live-account verification was not performed. See the [verification record](product-review-2026-10-06.md).
 
 ## Supabase and fastlane details
 
-The [Supabase Management API function-list response](https://supabase.com/docs/reference/api/v1-list-all-functions) contains one current function record with `status`, `version`, `created_at`, and `updated_at`. It does not identify prior versions, failed attempts, initiators, or immutable deployment records. The official [Edge Function deployment guide](https://supabase.com/docs/guides/functions/deploy) recommends CI for deployment, so crowline should route users to its GitHub or GitLab provider for trustworthy run history.
+The [Supabase Management API function-list response](https://supabase.com/docs/reference/api/v1-list-all-functions) contains one current function record with `status`, `version`, `created_at`, and `updated_at`. It does not identify prior versions, failed attempts, initiators, or immutable deployment records. The official [Edge Function deployment guide](https://supabase.com/docs/guides/functions/deploy) recommends CI for deployment, so ratelline should route users to its GitHub or GitLab provider for trustworthy run history.
 
-fastlane's official [continuous integration guide](https://docs.fastlane.tools/best-practices/continuous-integration/) describes fastlane as a runner used by GitHub Actions, GitLab CI, Jenkins, and other CI systems. Its generated JUnit data is local to an individual run and does not form an account-wide cloud history that crowline can discover from a standard fastlane login. crowline therefore detects the binary only and directs users to the CI provider.
+fastlane's official [continuous integration guide](https://docs.fastlane.tools/best-practices/continuous-integration/) describes fastlane as a runner used by GitHub Actions, GitLab CI, Jenkins, and other CI systems. Its generated JUnit data is local to an individual run and does not form an account-wide cloud history that ratelline can discover from a standard fastlane login. ratelline therefore detects the binary only and directs users to the CI provider.
 
 ## Synthetic verification scope
 

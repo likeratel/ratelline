@@ -85,7 +85,7 @@ impl ProjectContext {
     ) -> Result<Self, CliError> {
         validate_project(project_id, owner, slug)?;
         let directory = tempfile::Builder::new()
-            .prefix("crowline-eas-")
+            .prefix("ratelline-eas-")
             .tempdir()
             .map_err(|_| CliError::Unavailable)?;
         #[cfg(unix)]
@@ -96,7 +96,7 @@ impl ProjectContext {
         }
         std::fs::write(directory.path().join("package.json"), b"{\"private\":true}")
             .map_err(|_| CliError::Unavailable)?;
-        let config = json!({"expo":{"name":"Crowline monitor","owner":owner,"slug":slug,"extra":{"eas":{"projectId":project_id}}}});
+        let config = json!({"expo":{"name":"Ratelline monitor","owner":owner,"slug":slug,"extra":{"eas":{"projectId":project_id}}}});
         std::fs::write(directory.path().join("app.json"), config.to_string())
             .map_err(|_| CliError::Unavailable)?;
         let invocation = cli.for_eas_project(directory.path());

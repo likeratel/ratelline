@@ -26,7 +26,7 @@ fn tray_marks_failed_queries_without_hiding_last_observed_active_count() {
     snapshot.settings.panel.hidden_targets = vec![snapshot.settings.targets[0].key()];
     assert_eq!(
         presentation(&snapshot, Utc::now()),
-        (None, "crowline".into())
+        (None, "ratelline".into())
     );
 }
 
@@ -53,7 +53,7 @@ fn tray_health_warning_is_scoped_and_recovers_after_success() {
     }];
     assert_eq!(presentation(&snapshot, now).0.as_deref(), Some("!"));
     snapshot.query_health[0].status = QueryHealthStatus::Success;
-    assert_eq!(presentation(&snapshot, now), (None, "crowline".into()));
+    assert_eq!(presentation(&snapshot, now), (None, "ratelline".into()));
     assert_eq!(
         presentation(&snapshot, now + chrono::Duration::minutes(10))
             .0

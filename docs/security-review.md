@@ -6,7 +6,7 @@ Review date: 2026-09-29. This records a bounded review of the current source and
 
 ## Authentication and correctness fixes
 
-- Added GitHub accounts use a dedicated `gh-isolated` build. Upstream `GH_CONFIG_DIR` alone does not isolate its OS keyring. The small crowline patch namespaces keyring services by validated account ID and preserves the original service for local CLI sessions. Missing or incorrectly versioned helpers fail closed; isolated slots never fall back to system `gh`.
+- Added GitHub accounts use a dedicated `gh-isolated` build. Upstream `GH_CONFIG_DIR` alone does not isolate its OS keyring. The small ratelline patch namespaces keyring services by validated account ID and preserves the original service for local CLI sessions. Missing or incorrectly versioned helpers fail closed; isolated slots never fall back to system `gh`.
 - The pinned-source build runs a mock-keyring regression covering local/A/B accounts, empty-slot reads, login, switching, and logout. It never accesses real credentials. Actual additional-account browser login and Windows keyring behavior remain unverified.
 - Account mutations and login publication are serialized. Removing an account prevents late login publication. Regression tests cover persisted legacy migration, forged account definitions, unknown connections, and concurrent mutations.
 - Independent functional review found stale settings drafts and stale cross-account activity status. Both were fixed and re-reviewed. Latest activity state is reconciled separately from verified Mine attribution.
@@ -14,12 +14,12 @@ Review date: 2026-09-29. This records a bounded review of the current source and
 
 ## Dependency findings
 
-These counts are package-presence checks, not counts of demonstrated crowline exploits. Advisories can change after this review.
+These counts are package-presence checks, not counts of demonstrated ratelline exploits. Advisories can change after this review.
 
 | Input | Evidence and remaining limit |
 | --- | --- |
 | Frontend pnpm lock | `pnpm audit`: 91 dependencies, no reported advisories. |
-| Pinned Vercel 50.29.0 lock | 320 package names checked; 39 advisory records across 10 package names (1 critical, 17 high, 17 moderate, 4 low). Reviewed development/build/archive paths are not called by crowline's fixed API GET/login operations. The token-output advisory requires token arguments, which crowline does not pass. This does not clear the whole bundled CLI. |
+| Pinned Vercel 50.29.0 lock | 320 package names checked; 39 advisory records across 10 package names (1 critical, 17 high, 17 moderate, 4 low). Reviewed development/build/archive paths are not called by ratelline's fixed API GET/login operations. The token-output advisory requires token arguments, which ratelline does not pass. This does not clear the whole bundled CLI. |
 | Patched GitHub helper | OSV scan of 145 embedded Go modules found advisory matches in 19 module names. The Go 1.26.8 standard-library query returned none. Some findings concern unused command families or attacker-controlled enterprise hosts, but complete symbol-level reachability was not established. |
 | Cargo lock | Final OSV check covered 539 packages. Removing unused legacy AWS HTTP/TLS features removed vulnerable `h2 0.3.27` and `rustls-webpki 0.101.7`. Remaining matches are `glib 0.18.5` and `proc-macro-error 1.0.4`, absent from the current macOS dependency tree; Linux is not a supported bundle target. Windows runtime remains unverified. |
 

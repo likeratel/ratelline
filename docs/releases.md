@@ -19,8 +19,8 @@ Ordinary `pnpm desktop:build` remains a local developer build. It uses
 
 ## Signing evidence to date
 
-The public **v0.1.0** release on GitHub Releases (2026-10-11) is `crowline_0.1.0_universal.dmg`, a
-universal (Apple Silicon and Intel) build from source commit `41559d7` signed with Developer ID and
+The public **v0.1.0** release on GitHub Releases (2026-10-11) is `crowline_0.1.0_universal.dmg` (published under the former
+name crowline), a universal (Apple Silicon and Intel) build from source commit `41559d7` signed with Developer ID and
 hardened runtime. The app bundle and the disk image were each notarized and stapled, and both passed
 the repository's `scripts/release-artifacts.mjs` checks: strict signature verification, secure
 timestamp, staple validation, and Gatekeeper assessment as **Notarized Developer ID**. The app inside
@@ -43,12 +43,34 @@ the source commit when known, the full path or release asset name, and SHA-256 t
 evidence for one hash must never be used to describe another build, and any new handoff needs a new
 artifact hash and its own verification record.
 
+## Upgrading from crowline
+
+ratelline was previously named crowline. The bundle identifier changed from `io.crowline.desktop` to
+`io.ratelline.desktop`, which moves both the application-data folder and the OS credential service
+names. Upgrades keep existing data as follows:
+
+- **App data.** On startup, if the new `io.ratelline.desktop` data folder is missing or empty and the
+  sibling `io.crowline.desktop` folder exists, its files (`settings.json`, per-account CLI folders) are
+  copied. Symbolic links are skipped. The old folder is never modified or deleted. Per-file failures
+  are written to stderr and startup continues; a partially copied folder is not retried.
+- **Credentials.** Bitbucket and Cloudflare tokens move from `com.likeratel.crowline.bitbucket` and
+  `com.likeratel.crowline.cloudflare` to `com.likeratel.ratelline.*`. When the new entry is missing, the
+  app reads the old entry once and saves it under the new name. The old entry remains until the
+  connection is removed, which deletes both entries. macOS may ask once whether ratelline may read
+  the Keychain item created by crowline; denying it makes that connection ask for its token again.
+- **Not migrated.** Login-item (autostart) registration and macOS notification permission are tied to
+  the app identity, so re-enable them in General settings and re-allow notifications. The macOS menu-bar
+  position of the tray icon resets.
+- **Build configuration.** The updater public key variable is now `RATELLINE_UPDATER_PUBLIC_KEY`, and
+  release scripts read `RATELLINE_RELEASE_TARGET` and `RATELLINE_RELEASE_PLATFORM`. Rename the GitHub
+  repository variable before running the release workflow.
+
 ## Trust layers
 
 Tauri updater signing, Apple Developer ID signing/notarization, and Windows Authenticode signing are
 separate controls:
 
-- Tauri updater signatures let an installed crowline build verify an update artifact. Tauri requires
+- Tauri updater signatures let an installed ratelline build verify an update artifact. Tauri requires
   these signatures and does not allow verification to be disabled.
 - Apple Developer ID signing proves the macOS publisher. Hardened runtime, notarization, stapling,
   strict code-signature verification, and Gatekeeper assessment are all required by this workflow.
@@ -79,7 +101,7 @@ Configure these Actions variables:
 
 | Variable                         | Required format                                                                                      |
 | -------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| `CROWLINE_UPDATER_PUBLIC_KEY`    | Full public key paired with `TAURI_SIGNING_PRIVATE_KEY`; this value is compiled into release builds. |
+| `RATELLINE_UPDATER_PUBLIC_KEY`    | Full public key paired with `TAURI_SIGNING_PRIVATE_KEY`; this value is compiled into release builds. |
 | `APPLE_SIGNING_IDENTITY`         | Full `Developer ID Application: … (TEAMID)` identity.                                                |
 | `APPLE_TEAM_ID`                  | Ten-character Apple team ID matching the signing identity.                                           |
 | `APPLE_API_ISSUER`               | App Store Connect issuer UUID.                                                                       |
@@ -133,7 +155,7 @@ printing its credentials:
 ```sh
 node scripts/release-notarize-macos.mjs \
   --bundle-dir src-tauri/target/release/bundle \
-  --keychain-profile crowline
+  --keychain-profile ratelline
 ```
 
 After submission succeeds, set the expected public identity and team ID and run the same artifact
@@ -152,13 +174,13 @@ change the artifact bytes.
 
 ## Updater boundary
 
-crowline's current updater code requests
-`https://github.com/likeratel/crowline/releases/latest/download/latest.json` and verifies downloads
+ratelline's current updater code requests
+`https://github.com/likeratel/ratelline/releases/latest/download/latest.json` and verifies downloads
 with the public key compiled into the application. A normal local build has no public key, keeps the
 updater disabled, and reports `updaterConfigured: false`.
 
 The release-only overlay enables `createUpdaterArtifacts` and embeds
-`CROWLINE_UPDATER_PUBLIC_KEY`. This is enough to generate and verify signed updater artifacts, but it
+`RATELLINE_UPDATER_PUBLIC_KEY`. This is enough to generate and verify signed updater artifacts, but it
 does not make the GitHub release endpoint a reachable update service. Do not invent or document a public URL
 until a real distribution service exists.
 

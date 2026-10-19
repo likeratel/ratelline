@@ -284,8 +284,8 @@ function TrayPanelContent({
     <main className="tray-panel" aria-label={t("tray.summary")}>
       <header className="panel-header">
         <span className="panel-brand">
-          <img src="/crowline.png" alt="" />
-          crowline
+          <img src="/ratelline-mark-light.png" alt="" />
+          ratelline
         </span>
         <div className="panel-actions">
           <button

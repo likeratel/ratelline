@@ -35,15 +35,16 @@
   border-radius: 12px;
 }
 .brand-mark img {
-  width: 46px;
-  height: 46px;
+  width: 36px;
+  height: 36px;
   object-fit: contain;
-  filter: grayscale(1);
 }
 .boot-logo {
-  filter: grayscale(1);
   width: 144px;
   height: 144px;
+  padding: 24px;
+  box-sizing: border-box;
+  object-fit: contain;
   background: #a4a8b0;
   border-radius: 32px;
 }

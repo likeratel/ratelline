@@ -237,7 +237,7 @@ pub(crate) fn open_dashboard(app: &AppHandle) -> Result<(), String> {
         DASHBOARD_LABEL,
         WebviewUrl::App("index.html?view=dashboard".into()),
     )
-    .title("crowline dashboard")
+    .title("ratelline dashboard")
     .inner_size(DASHBOARD_WIDTH, DASHBOARD_HEIGHT)
     .min_inner_size(DASHBOARD_MIN_WIDTH, DASHBOARD_MIN_HEIGHT)
     .resizable(true)

@@ -54,7 +54,7 @@ fn health(
     }
 }
 fn state() -> AppState {
-    let directory = std::env::temp_dir().join(format!("crowline-stream-{}", uuid::Uuid::new_v4()));
+    let directory = std::env::temp_dir().join(format!("ratelline-stream-{}", uuid::Uuid::new_v4()));
     AppState {
         tools: Toolchain::unavailable_for_test(&directory),
         store: SettingsStore::new(directory),
@@ -1309,7 +1309,7 @@ impl FakeGithub {
     fn start_with_identity_delay(slow_active: bool, identity_delay_ms: u64) -> Self {
         use std::os::unix::fs::PermissionsExt;
         let directory =
-            std::env::temp_dir().join(format!("crowline-stream-cli-{}", uuid::Uuid::new_v4()));
+            std::env::temp_dir().join(format!("ratelline-stream-cli-{}", uuid::Uuid::new_v4()));
         std::fs::create_dir_all(&directory).unwrap();
         let script = directory.join("fake-cli");
         let source = r#"#!/bin/sh

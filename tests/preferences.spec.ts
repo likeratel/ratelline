@@ -175,7 +175,7 @@ test("notification custom results retain the current selection and stay open whi
     )
     .toMatchObject({ scope: "mine", statuses: ["success", "failed"] });
   await page.screenshot({
-    path: "artifacts/crowline-notification-settings.png",
+    path: "artifacts/ratelline-notification-settings.png",
   });
   await page.getByRole("button", { name: /^전체 서비스/ }).click();
   await settings(page).click();

@@ -178,7 +178,7 @@ export const ja = {
   "connections.selectSaveHelp":
     "監視する対象だけを選択して設定を保存してください。",
   "connections.readOnly":
-    "Crowlineは実行状態の参照のみを行い、リモートサービスを変更することはありません。",
+    "Ratellineは実行状態の参照のみを行い、リモートサービスを変更することはありません。",
   "connections.checkConnection": "接続を確認してください",
   "connections.tokenNotNeeded":
     "既存の認証を使用します。トークンの入力は不要です。",

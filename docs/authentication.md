@@ -1,12 +1,12 @@
 # Authentication and provider access
 
-crowline runs on the user's computer without a crowline-operated server. It prefers installed provider CLIs and their existing logins, supports multiple accounts where the provider integration can keep them separate, and uses a token only where a suitable CLI integration is unavailable. Monitoring is read-only; hiding a row never deletes or cancels a remote execution.
+ratelline runs on the user's computer without a ratelline-operated server. It prefers installed provider CLIs and their existing logins, supports multiple accounts where the provider integration can keep them separate, and uses a token only where a suitable CLI integration is unavailable. Monitoring is read-only; hiding a row never deletes or cancels a remote execution.
 
 ## GitHub accounts
 
 Install [GitHub CLI](https://cli.github.com/) and run `gh auth login` in a terminal. In **Settings → Connections**, select a GitHub connection, choose a signed-in CLI username, and connect it. Additional connections may select different CLI users; GitHub Actions and GitHub Deployments use the same available user list.
 
-The default local connection can use the CLI's current session. Explicit account selections use [`gh auth token --hostname github.com --user USER`](https://cli.github.com/manual/gh_auth_token) and pass the result only to the matching `gh api` subprocess. Crowline does not run `gh auth switch`, persist extracted GitHub tokens, return them to the webview, or distribute a patched GitHub CLI. Adding a new login in the terminal is an explicit user action. No Crowline OAuth app or client ID is required.
+The default local connection can use the CLI's current session. Explicit account selections use [`gh auth token --hostname github.com --user USER`](https://cli.github.com/manual/gh_auth_token) and pass the result only to the matching `gh api` subprocess. Ratelline does not run `gh auth switch`, persist extracted GitHub tokens, return them to the webview, or distribute a patched GitHub CLI. Adding a new login in the terminal is an explicit user action. No Ratelline OAuth app or client ID is required.
 
 A connection is bound to the verified provider identity. Existing API-era connections keep their IDs, selected projects, aliases, and notification rules; select the matching CLI account to reconnect. An unbound extra connection does not silently inherit the CLI's current user.
 
@@ -14,7 +14,7 @@ A connection is bound to the verified provider identity. Existing API-era connec
 
 Install [Vercel CLI](https://vercel.com/docs/cli) and sign in with `vercel login` for the default local connection. Additional accounts use the same installed executable with a private, per-connection [`--global-config`](https://vercel.com/docs/cli/global-options) directory. Use the app's browser sign-in action to authenticate that connection. This keeps additional accounts separate from the terminal's default Vercel session.
 
-Crowline reads through [`vercel api`](https://vercel.com/changelog/introducing-the-vercel-api-cli-command), explicitly selecting the personal or team scope. Unsupported commands or CLI output report an actionable compatibility error rather than an empty successful result. Previous API connections may need to sign in again with the same account. Crowline no longer asks for a Vercel API token or its own OAuth registration.
+Ratelline reads through [`vercel api`](https://vercel.com/changelog/introducing-the-vercel-api-cli-command), explicitly selecting the personal or team scope. Unsupported commands or CLI output report an actionable compatibility error rather than an empty successful result. Previous API connections may need to sign in again with the same account. Ratelline no longer asks for a Vercel API token or its own OAuth registration.
 
 ## Provider decision matrix
 
@@ -33,9 +33,9 @@ Crowline reads through [`vercel api`](https://vercel.com/changelog/introducing-t
 | EAS / Expo | User-entered EAS project UUID, owner, and slug with an app-managed context for installed `eas` that does not change project files. `eas build:list --json --non-interactive --limit 1 --offset 0` validates the server project identity before project-scoped Build and published Update reads. |
 | Supabase / fastlane | Guidance only. Current Supabase function state is not deployment history; fastlane history belongs to its CI provider. |
 
-No CLI or Node runtime is bundled. Crowline checks installed executables and versions, uses bounded non-interactive commands, and distinguishes installation, login, compatibility, timeout, and partial-query failures. Installation/update links and login commands are available in connection settings; install or update the official CLI, then restart the app. Crowline does not automatically install packages.
+No CLI or Node runtime is bundled. Ratelline checks installed executables and versions, uses bounded non-interactive commands, and distinguishes installation, login, compatibility, timeout, and partial-query failures. Installation/update links and login commands are available in connection settings; install or update the official CLI, then restart the app. Ratelline does not automatically install packages.
 
-Bitbucket credentials stay in the OS secure credential store, separately from settings. Cloudflare follows the same vault boundary for its API token. Firebase and EAS reuse their selected installed CLI sessions; any short-lived Firebase access token remains in the backend process and is not persisted, returned over IPC, or obtained by extracting a refresh token. Removing a connection removes only Crowline's monitoring configuration and app-managed vault material. Old GitHub/Vercel API credentials are not used by the CLI paths; migration does not revoke tokens at the provider. CLI logins and provider-side revocation remain under the user's control.
+Bitbucket credentials stay in the OS secure credential store, separately from settings. Cloudflare follows the same vault boundary for its API token. Firebase and EAS reuse their selected installed CLI sessions; any short-lived Firebase access token remains in the backend process and is not persisted, returned over IPC, or obtained by extracting a refresh token. Removing a connection removes only Ratelline's monitoring configuration and app-managed vault material. Old GitHub/Vercel API credentials are not used by the CLI paths; migration does not revoke tokens at the provider. CLI logins and provider-side revocation remain under the user's control.
 
 ## Hide individual executions
 

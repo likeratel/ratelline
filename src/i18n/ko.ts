@@ -174,7 +174,7 @@ export const ko = {
   "connections.selectSave": "대상 선택 및 저장",
   "connections.selectSaveHelp": "모니터링할 대상만 선택해 설정을 저장하세요.",
   "connections.readOnly":
-    "Crowline은 실행 상태만 조회하며 원격 서비스를 변경하지 않습니다.",
+    "Ratelline은 실행 상태만 조회하며 원격 서비스를 변경하지 않습니다.",
   "connections.checkConnection": "연결을 확인해 주세요",
   "connections.tokenNotNeeded":
     "기존 인증을 사용합니다. 토큰 입력이 필요하지 않아요.",

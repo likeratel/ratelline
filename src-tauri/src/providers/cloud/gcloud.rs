@@ -214,7 +214,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
                     status: ConnectionStatus::Connected,
                     account: Some(active.account),
                     message: Some(
-                        "Cloud Run and Cloud Build are read only through enabled APIs and existing IAM access; crowline does not enable APIs or change projects."
+                        "Cloud Run and Cloud Build are read only through enabled APIs and existing IAM access; ratelline does not enable APIs or change projects."
                             .into(),
                     ),
                     cli_version: version,

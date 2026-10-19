@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "crowline",
+  "productName": "ratelline",
   "version": "0.1.0",
-  "identifier": "io.crowline.desktop",
+  "identifier": "io.ratelline.desktop",
   "build": {
     "beforeDevCommand": "pnpm dev",
     "devUrl": "http://localhost:1420",
@@ -13,7 +13,7 @@
     "windows": [
       {
         "label": "main",
-        "title": "crowline",
+        "title": "ratelline",
         "width": 420,
         "height": 540,
         "minWidth": 360,

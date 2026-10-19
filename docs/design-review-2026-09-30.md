@@ -1,4 +1,4 @@
-# Crowline 디자인 리뷰
+# Ratelline 디자인 리뷰
 
 > 과거 리뷰 기록입니다. 이후 UI 변경이 반영되어 있으므로 현재 화면과 지원 범위는 [README](../README.ko.md)를 기준으로 확인하세요.
 
@@ -24,7 +24,7 @@
 
 **완료 기준:** 기본 창에서 선택된 서비스·계정·다음 행동이 스크롤 없이 보이며, 720×520에서도 다음 행동에 쉽게 도달한다.
 
-근거: [Connections.tsx](../src/components/Connections.tsx#L339), [connections.css](../src/styles/connections.css#L49), 기존 `artifacts/crowline-dialog-guide-full.png`, 실제 앱 첫 연결 화면.
+근거: [Connections.tsx](../src/components/Connections.tsx#L339), [connections.css](../src/styles/connections.css#L49), 기존 `artifacts/ratelline-dialog-guide-full.png`, 실제 앱 첫 연결 화면.
 
 ### 2. 높음 — 상태바의 상태 표시가 플랫폼 로고에 비해 너무 작음
 
@@ -36,7 +36,7 @@
 
 **완료 기준:** 420px 패널에서 hover 없이 성공/실패/진행/대기를 구분할 수 있고 긴 실행명도 읽을 공간을 유지한다.
 
-근거: [TrayPanel.tsx](../src/components/TrayPanel.tsx#L56), `artifacts/crowline-panel.png`.
+근거: [TrayPanel.tsx](../src/components/TrayPanel.tsx#L56), `artifacts/ratelline-panel.png`.
 
 ### 3. 높음 — 같은 창에서 저장 적용 시점이 다름
 

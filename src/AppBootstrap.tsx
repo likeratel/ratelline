@@ -21,7 +21,7 @@ function StartupState({ failed = false }: { failed?: boolean }) {
   const { locale, t } = useI18n();
   return (
     <main className="boot" role={failed ? "alert" : "status"}>
-      <h1>crowline</h1>
+      <h1>ratelline</h1>
       <p>{bootCopy[locale][failed ? 1 : 0]}</p>
       {failed && (
         <button className="button" onClick={() => window.location.reload()}>

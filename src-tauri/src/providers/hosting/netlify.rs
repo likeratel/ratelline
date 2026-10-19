@@ -251,7 +251,7 @@ fn deploy_page(
                     Provider::Netlify,
                     &target.connection_id,
                     Some(&target.id),
-                    "Netlify history reached crowline's 10,000-page cursor safety limit.",
+                    "Netlify history reached ratelline's 10,000-page cursor safety limit.",
                 )
             })
             .into_iter()

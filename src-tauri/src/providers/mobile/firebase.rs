@@ -174,7 +174,7 @@ pub async fn active_api(cli: &CliInvocation, target: &Target) -> Result<Activity
         if page + 1 == MAX_ACTIVE_PAGES {
             issues.push(target_issue(
                 target,
-                "Firebase App Hosting active scan reached crowline's 200-rollout safety limit. Active results are partial.",
+                "Firebase App Hosting active scan reached ratelline's 200-rollout safety limit. Active results are partial.",
             ));
         }
     }
@@ -236,7 +236,7 @@ async fn discover_hosting_sites(
                 account,
                 None,
                 format!(
-                    "Firebase Hosting site discovery for {} reached crowline's pagination limit. Results are partial.",
+                    "Firebase Hosting site discovery for {} reached ratelline's pagination limit. Results are partial.",
                     project.project_id
                 ),
             ));
@@ -330,7 +330,7 @@ async fn discover_app_hosting(
                     account,
                     None,
                     format!(
-                        "Firebase App Hosting backend discovery for {} reached crowline's pagination limit. Results are partial.",
+                        "Firebase App Hosting backend discovery for {} reached ratelline's pagination limit. Results are partial.",
                         project.project_id
                     ),
                 ));
@@ -356,7 +356,7 @@ async fn list_locations(api: &FirebaseApi, project: &str) -> Result<Vec<Location
         }
         if page + 1 == MAX_LIST_PAGES {
             return Err(
-                "Firebase App Hosting location discovery reached crowline's pagination limit."
+                "Firebase App Hosting location discovery reached ratelline's pagination limit."
                     .into(),
             );
         }

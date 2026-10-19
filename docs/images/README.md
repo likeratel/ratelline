@@ -17,7 +17,7 @@ The app renders fictional projects and accounts from [`src/demo.ts`](../../src/d
 ## Refreshing
 
 1. Run `pnpm dev` and open the local preview (`/?view=dashboard` or `/?view=panel`). Keep the synthetic-data notice visible on the dashboard.
-2. Capture the panel and relevant settings with the Korean UI. Use fictional demo data only. The panel image can also be taken from `artifacts/crowline-panel.png` after `pnpm test:e2e`.
+2. Capture the panel and relevant settings with the Korean UI. Use fictional demo data only. The panel image can also be taken from `artifacts/ratelline-panel.png` after `pnpm test:e2e`.
 3. Crop browser chrome out of screenshots. Keep a consistent canvas for GIF frames and enough time to read each view. Encode the GIF with an optimized palette.
 4. Replace the existing asset names, inspect every frame for clipping or private data, and check the four README links. Keep temporary captures and encoder inputs under ignored `artifacts/`.
 

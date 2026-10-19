@@ -164,7 +164,7 @@ export const en = {
   "connections.guideTitle": "How to connect",
   "connections.prepare": "Prepare connection",
   "connections.reuseSelected":
-    "Crowline will reuse the existing credentials for ‘{label}’. You do not need to sign in again.",
+    "Ratelline will reuse the existing credentials for ‘{label}’. You do not need to sign in again.",
   "connections.awsSelected":
     "Confirm the ‘{profile}’ profile and region, then use ‘SSO sign in’ in the app. To sign in from a terminal, run {command}.",
   "connections.awsAdd": "Load or add an existing AWS profile.",
@@ -180,7 +180,7 @@ export const en = {
   "connections.selectSaveHelp":
     "Select only the targets you want to monitor, then save.",
   "connections.readOnly":
-    "Crowline only reads run status. It cannot change remote services.",
+    "Ratelline only reads run status. It cannot change remote services.",
   "connections.checkConnection": "Verify the connection",
   "connections.tokenNotNeeded":
     "Existing authentication will be used. No token entry is needed.",

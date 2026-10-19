@@ -45,7 +45,7 @@ impl SettingsStore {
 
     fn block_saving(&self, message: String) -> String {
         self.load_error
-            .get_or_init(|| format!("{message} Settings changes are locked to preserve the original file. Restore a valid settings.json or its folder permissions, then restart crowline."))
+            .get_or_init(|| format!("{message} Settings changes are locked to preserve the original file. Restore a valid settings.json or its folder permissions, then restart ratelline."))
             .clone()
     }
 
@@ -112,7 +112,7 @@ mod tests {
 
     fn test_directory(name: &str) -> PathBuf {
         std::env::temp_dir().join(format!(
-            "crowline-{name}-{}-{}",
+            "ratelline-{name}-{}-{}",
             std::process::id(),
             uuid::Uuid::new_v4()
         ))
@@ -211,7 +211,7 @@ mod tests {
         std::fs::write(&path, original).unwrap();
         let store = SettingsStore::new(directory.clone());
         assert!(store.load().await.is_err());
-        assert!(store.load_error().unwrap().contains("restart crowline"));
+        assert!(store.load_error().unwrap().contains("restart ratelline"));
         assert!(store.clone().save(Settings::default()).await.is_err());
         assert_eq!(std::fs::read(&path).unwrap(), original);
 

@@ -12,7 +12,7 @@ The localized READMEs are the source of truth for build/run instructions, suppor
 | [Provider verification](provider-verification.md) | Official command evidence, synthetic invocation coverage, and authenticated-live limits |
 | [Provider capability notes](mobile-provider-notes.md)   | Why some services are listed as guidance rather than direct integrations                       |
 | [Media](images/README.md)                               | Screenshot/GIF contents, fictional data, and capture notes                                     |
-| [Brand](brand.md)                                       | Crow symbol provenance                                                                         |
+| [Brand](brand.md)                                       | Ratel symbol provenance                                                                        |
 | [Third-party notices](../THIRD_PARTY_NOTICES.md)        | Platform logos and retired bundled-tool notice                                                 |
 
 ## Historical records
