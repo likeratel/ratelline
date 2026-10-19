@@ -36,6 +36,7 @@ export const settingsChangeSchema = z.discriminatedUnion("kind", [
   }),
   z.object({ kind: z.literal("language"), value: languageSchema }),
   z.object({ kind: z.literal("automaticUpdates"), value: z.boolean() }),
+  z.object({ kind: z.literal("menuBarAnimation"), value: z.boolean() }),
   z.object({
     kind: z.literal("panel"),
     patch: z.object({
@@ -189,6 +190,11 @@ export function applySettingsChange(
           ...preferences,
           checkUpdatesAutomatically: change.value,
         },
+      };
+    case "menuBarAnimation":
+      return {
+        ...settings,
+        preferences: { ...preferences, animateMenuBarIcon: change.value },
       };
     case "panel":
       return { ...settings, panel: { ...panel, ...change.patch } };

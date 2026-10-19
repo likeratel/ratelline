@@ -44,6 +44,10 @@ tauri-plugin-notification = "2"
 tauri-plugin-updater = "2"
 sys-locale = "0.3"
 
+[target.'cfg(target_os = "macos")'.dependencies]
+# Reads the system "Reduce motion" accessibility setting for the tray animation.
+objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSAccessibility", "NSWorkspace"] }
+
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
 [profile.release]

@@ -13,6 +13,7 @@ mod preferences;
 pub mod providers;
 mod settings;
 mod state;
+mod tray_animation;
 mod windows;
 
 use tauri::{Manager, RunEvent, WindowEvent};
@@ -44,6 +45,8 @@ pub fn run() {
             app.manage(state);
             app.manage(desktop::DesktopState::new(language));
             app.manage(windows::PanelFocusState::default());
+            #[cfg(target_os = "macos")]
+            app.manage(tray_animation::TrayAnimator::default());
             desktop::build_tray(app, language)?;
             desktop::start_tray_language_sync(app.handle().clone());
             state::start_polling(app.handle().clone());

@@ -205,6 +205,9 @@ pub enum SettingsChange {
     AutomaticUpdates {
         value: bool,
     },
+    MenuBarAnimation {
+        value: bool,
+    },
     Panel {
         patch: PanelSettingsPatch,
     },
@@ -713,6 +716,9 @@ mod settings_change_tests {
             clear_scope,
             SettingsChange::DisplayTargetScope { scope: None, .. }
         ));
+        let animation: SettingsChange =
+            serde_json::from_str(r#"{"kind":"menuBarAnimation","value":false}"#).unwrap();
+        assert_eq!(animation, SettingsChange::MenuBarAnimation { value: false });
     }
 }
 

@@ -12,6 +12,12 @@ pub(super) fn update_tray<R: Runtime>(app: &AppHandle<R>, snapshot: &Snapshot) {
             eprintln!("Could not update tray tooltip: {error}");
         }
     }
+    #[cfg(target_os = "macos")]
+    crate::tray_animation::sync(
+        app,
+        active_tray_count(snapshot),
+        snapshot.settings.preferences.animate_menu_bar_icon,
+    );
 }
 
 pub(super) fn presentation(

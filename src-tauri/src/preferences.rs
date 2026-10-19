@@ -51,6 +51,8 @@ pub struct Preferences {
     pub language: Language,
     pub notifications: NotificationPreferences,
     pub check_updates_automatically: bool,
+    /// Walks the macOS menu-bar ratel while runs are in progress.
+    pub animate_menu_bar_icon: bool,
     pub account_aliases: HashMap<String, String>,
 }
 
@@ -60,6 +62,7 @@ impl Default for Preferences {
             language: Language::System,
             notifications: NotificationPreferences::default(),
             check_updates_automatically: true,
+            animate_menu_bar_icon: true,
             account_aliases: HashMap::new(),
         }
     }
@@ -137,6 +140,7 @@ mod tests {
         let preferences: Preferences = serde_json::from_str("{}").unwrap();
         assert_eq!(preferences, Preferences::default());
         assert!(preferences.check_updates_automatically);
+        assert!(preferences.animate_menu_bar_icon);
         assert!(preferences.account_aliases.is_empty());
     }
 

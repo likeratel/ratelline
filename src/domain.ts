@@ -84,6 +84,7 @@ export const preferencesSchema = z.object({
     .default({}),
   language: languageSchema.default("system"),
   checkUpdatesAutomatically: z.boolean().default(true),
+  animateMenuBarIcon: z.boolean().default(true),
   notifications: z
     .object({
       enabled: z.boolean().default(false),

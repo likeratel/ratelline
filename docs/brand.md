@@ -6,6 +6,7 @@
 - 앱 아이콘 원본: `src-tauri/icons/source-1024.png` (어두운 둥근 사각형 위의 라텔)
 - 앱 아이콘: `src-tauri/icons/` (Tauri icon 명령으로 원본에서 플랫폼별 크기 생성)
 - macOS 메뉴바 글리프: `src-tauri/icons/tray.png`(22px), `tray@2x.png`(44px). 검정과 알파만 쓰는 템플릿 이미지라 macOS가 메뉴바 밝기에 맞춰 색을 바꿉니다. Windows와 Linux 트레이는 앱 아이콘을 그대로 씁니다.
+- macOS 메뉴바 걷기 프레임: `src-tauri/icons/tray-walk/walk-{0,1,2,3}@2x.png`(84×44, 검정+알파 템플릿). 진행 중인 실행이 있으면 160ms 간격으로 순환하고, 끝나면 정지 자세(`walk-0`, `tray@2x.png`와 같은 그림)로 돌아갑니다. 앱 설정이나 시스템 ‘동작 줄이기’가 켜져 있으면 움직이지 않습니다.
 - 제작 도구: 기본 내장 image_gen
 - 이름 표기: 소문자 `ratelline`
 

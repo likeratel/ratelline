@@ -639,6 +639,9 @@ fn apply_settings_change(
         SettingsChange::AutomaticUpdates { value } => {
             settings.preferences.check_updates_automatically = value;
         }
+        SettingsChange::MenuBarAnimation { value } => {
+            settings.preferences.animate_menu_bar_icon = value;
+        }
         SettingsChange::Panel { patch } => {
             settings.panel.show_active = patch.show_active.unwrap_or(settings.panel.show_active);
             settings.panel.show_completed = patch

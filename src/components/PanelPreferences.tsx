@@ -217,6 +217,26 @@ export function PanelPreferences({
           <SettingFeedback changeKey="panel:rowLimit" />
         </div>
       </fieldset>
+      <fieldset>
+        <legend>{p("icon")}</legend>
+        <div className="preference-control">
+          <label className="preference-option">
+            <input
+              type="checkbox"
+              checked={settings.preferences.animateMenuBarIcon}
+              onChange={(event) =>
+                void change({
+                  kind: "menuBarAnimation",
+                  value: event.currentTarget.checked,
+                })
+              }
+            />
+            {p("animateIcon")}
+          </label>
+          <SettingFeedback changeKey="menuBarAnimation" />
+        </div>
+        <p>{p("animateIconHelp")}</p>
+      </fieldset>
     </section>
   );
 }

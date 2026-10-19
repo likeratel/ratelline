@@ -513,6 +513,7 @@ describe("panel activity order and settings migration", () => {
     const migrated = settingsSchema.parse({ ...legacy, panel });
     expect(migrated.preferences.language).toBe("system");
     expect(migrated.preferences.notifications.enabled).toBe(false);
+    expect(migrated.preferences.animateMenuBarIcon).toBe(true);
     expect(migrated.panel.pinnedTargets).toEqual([]);
   });
   it("rejects unknown languages and duplicate notification rules", () => {

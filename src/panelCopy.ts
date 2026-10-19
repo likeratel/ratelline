@@ -24,6 +24,24 @@ const text = {
     "macOSではCommandキーを押したままメニューバーのアイコンをドラッグすると位置を変えられます。",
     "在 macOS 上，按住 Command 键并拖动菜单栏图标即可调整位置。",
   ],
+  icon: [
+    "메뉴 막대 아이콘",
+    "Menu bar icon",
+    "メニューバーのアイコン",
+    "菜单栏图标",
+  ],
+  animateIcon: [
+    "진행 중일 때 메뉴 막대 아이콘 움직이기",
+    "Animate the menu bar icon while runs are in progress",
+    "実行中はメニューバーのアイコンを動かす",
+    "有运行进行中时让菜单栏图标动起来",
+  ],
+  animateIconHelp: [
+    "macOS에서 라텔이 걷습니다. 시스템의 ‘동작 줄이기’가 켜져 있으면 멈춰 있습니다.",
+    "On macOS the ratel walks. It stays still when the system's Reduce motion setting is on.",
+    "macOSではラーテルが歩きます。システムの「視差効果を減らす」がオンのときは止まったままです。",
+    "在 macOS 上蜜獾会走动。系统开启“减弱动态效果”时保持静止。",
+  ],
   tips: [
     "상태 막대 도움말",
     "Menu bar tip",

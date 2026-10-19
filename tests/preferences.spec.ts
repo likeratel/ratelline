@@ -209,6 +209,25 @@ test("changing one settings section does not overwrite another preference", asyn
   ).not.toBeChecked();
 });
 
+test("menu bar icon animation defaults on and persists when turned off", async ({
+  page,
+}) => {
+  await page.goto("/?view=dashboard");
+  await settings(page).click();
+  await tab(page, "메뉴 막대").click();
+  const menuBar = panel(page, "메뉴 막대");
+  const animation = menuBar.getByLabel(
+    "진행 중일 때 메뉴 막대 아이콘 움직이기",
+    { exact: true },
+  );
+  await expect(animation).toBeChecked();
+  await expect(menuBar).toContainText("동작 줄이기");
+  await animation.uncheck();
+  await tab(page, "일반").click();
+  await tab(page, "메뉴 막대").click();
+  await expect(animation).not.toBeChecked();
+});
+
 test("English settings tabs and recovery links open Connections from General", async ({
   page,
 }) => {
