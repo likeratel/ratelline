@@ -82,6 +82,8 @@ Existing connection IDs, selected targets, aliases and notification rules are pr
 
 ratelline prefers installed official CLIs, retains AWS SDK shared-profile access and Bitbucket API-token access, and bundles no provider executable or Node runtime. It requires no deployment hooks or project instrumentation.
 
+Apps opened from Finder or at login do not inherit shell `PATH`, so CLIs are searched in `PATH`, common install directories (Homebrew, `~/.local/bin`, npm/pnpm/Volta globals, asdf/mise shims), and nvm Node versions under `$NVM_DIR` (default `~/.nvm`): the `default` alias first, then the other installed versions, newest first. A discovered CLI runs with its own directory first in `PATH`, so nvm-installed Node CLIs use the matching `node`. Other version managers (fnm, nodenv, n) need the CLI and, for Node-based CLIs, `node` linked into one of these directories, such as `~/.local/bin`. The default-alias match does not follow every nvm alias form; unresolved aliases fall back to the newest installed version.
+
 | Platform                                      | Monitoring                                     | Limits                                                                                                              |
 | --------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | GitHub Actions                                | Workflow runs                                  | Installed gh; selected CLI user per connection, recent pages and active checks. |

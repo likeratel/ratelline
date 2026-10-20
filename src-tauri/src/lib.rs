@@ -8,6 +8,7 @@ mod legacy_migration;
 mod login;
 pub mod models;
 mod notifications;
+mod nvm;
 mod panel;
 mod preferences;
 pub mod providers;

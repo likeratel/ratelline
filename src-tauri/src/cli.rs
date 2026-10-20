@@ -770,10 +770,11 @@ async fn discover_cli(
         .iter()
         .map(|argument| (*argument).into())
         .collect();
-    if let Some(path) = execution_path {
-        invocation
-            .environment
-            .push((OsString::from("PATH"), path.clone()));
+    if let Some(path) = execution_path
+        .as_ref()
+        .and_then(|path| sibling_first_path(invocation.program.parent(), path))
+    {
+        invocation.environment.push((OsString::from("PATH"), path));
     }
     if invocation
         .version_result()
@@ -783,6 +784,17 @@ async fn discover_cli(
         invocation.compatibility_error = Some(CliError::UnsupportedVersion);
     }
     Some(invocation)
+}
+
+/// Puts the CLI's own directory first so `#!/usr/bin/env node` scripts run
+/// with the interpreter installed next to them (for example, the same nvm version).
+fn sibling_first_path(directory: Option<&Path>, execution_path: &OsString) -> Option<OsString> {
+    let directories = directory
+        .map(Path::to_path_buf)
+        .into_iter()
+        .chain(env::split_paths(execution_path));
+    let mut seen = HashSet::new();
+    env::join_paths(directories.filter(|path| seen.insert(path.clone()))).ok()
 }
 
 fn parse_version(value: &str) -> Option<(u32, u32, u32)> {
@@ -855,6 +867,7 @@ fn candidate_directories() -> Vec<PathBuf> {
                 home.join(".local/share/mise/shims"),
                 home.join("google-cloud-sdk/bin"),
             ]);
+            candidates.extend(crate::nvm::bin_directories(&nvm_dir(&home)));
         }
     }
     if cfg!(target_os = "linux") {
@@ -874,6 +887,7 @@ fn candidate_directories() -> Vec<PathBuf> {
                 home.join(".local/share/mise/shims"),
                 home.join("google-cloud-sdk/bin"),
             ]);
+            candidates.extend(crate::nvm::bin_directories(&nvm_dir(&home)));
         }
     }
     if cfg!(windows) {
@@ -900,6 +914,13 @@ fn candidate_directories() -> Vec<PathBuf> {
         .into_iter()
         .filter(|path| seen.insert(path.clone()))
         .collect()
+}
+
+fn nvm_dir(home: &Path) -> PathBuf {
+    env::var_os("NVM_DIR")
+        .filter(|value| !value.is_empty())
+        .map(PathBuf::from)
+        .unwrap_or_else(|| home.join(".nvm"))
 }
 
 pub fn login_timeout() -> Duration {
@@ -1393,6 +1414,21 @@ printf '1.2.3\n'
             .environment
             .contains(&(OsString::from("PATH"), expanded_path)));
         std::fs::remove_dir_all(root).unwrap();
+    }
+
+    #[test]
+    fn cli_directory_leads_execution_path_without_duplicates() {
+        let shared = PathBuf::from("/fixture/shared/bin");
+        let execution_path = env::join_paths([PathBuf::from("/usr/bin"), shared.clone()]).unwrap();
+
+        assert_eq!(
+            sibling_first_path(Some(&shared), &execution_path),
+            env::join_paths([shared, PathBuf::from("/usr/bin")]).ok()
+        );
+        assert_eq!(
+            sibling_first_path(None, &execution_path),
+            Some(execution_path)
+        );
     }
 
     #[test]
