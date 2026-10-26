@@ -10,7 +10,7 @@ ratelline is a menu-bar and system-tray app that patrols your deploy lines: rece
 
 > Built with AI. I set the direction and checked the integrations against my own accounts; the code, tests and docs were written in sessions with [Claude Code](https://claude.com/claude-code). See [Why I built this](#why-i-built-this).
 
-**Download:** the signed and notarized macOS build (Apple Silicon and Intel) is on the [Releases page](https://github.com/likeratel/ratelline/releases). No Windows installer is published yet.
+**Download:** the signed and notarized macOS build (Apple Silicon and Intel) is on the [Releases page](https://github.com/likeratel/ratelline/releases/latest). See [Install](#install) and [Quick start](#quick-start). No Windows installer is published yet.
 
 > **Verification status.** GitHub Actions, Vercel, and Bitbucket Cloud have been exercised with real accounts. Every other service is covered by command-contract tests against official CLI and API documentation using synthetic data, not by a live-account check. See [provider verification](docs/provider-verification.md) and the [2026-10-06 product review](docs/product-review-2026-10-06.md).
 
@@ -49,24 +49,51 @@ Captured from the app’s browser preview with fictional projects and accounts. 
 
 </details>
 
-## Development setup and run
+## Install
 
-Node.js 22.23.3 or later, pnpm 10, and Rust stable are required. Install [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/) (Xcode Command Line Tools on macOS; Microsoft C++ Build Tools and WebView2 on Windows).
+Requires macOS 12 or later on Apple Silicon or Intel. No Windows or Linux installer is published. Windows can be built from source (see [Development](#development)); Linux builds are not verified.
 
-```sh
-git clone https://github.com/likeratel/ratelline.git
-cd ratelline
-pnpm install --frozen-lockfile
-pnpm tauri dev
-```
+1. Download the latest `ratelline_<version>_universal.dmg` from the [Releases page](https://github.com/likeratel/ratelline/releases/latest). Each release lists the file's SHA-256; check it with `shasum -a 256 <file>.dmg`.
+2. Open the DMG and drag **ratelline** to **Applications**.
+3. Open ratelline from Applications. The app is Developer ID signed and notarized, so macOS opens it without a security override. It runs in the menu bar only, with no Dock icon.
+4. Install and sign in to the official CLI for each service you want to monitor. ratelline bundles no provider tools and stores no CLI credentials.
 
-## Build
+| Service | CLI | Sign in |
+| --- | --- | --- |
+| GitHub Actions, GitHub Deployments | `gh` | `gh auth login` |
+| Vercel | `vercel` | `vercel login`, or **Sign in with browser** in the app |
+| AWS | `aws` (v2) | `aws configure` or `aws sso login --profile <name>`; the app can start SSO sign-in for a profile |
+| Railway / Netlify / Render / Heroku | `railway` / `netlify` / `render` / `heroku` | `<cli> login` |
+| Fly.io | `fly` or `flyctl` | `fly auth login` |
+| GitLab.com | `glab` | `glab auth login` |
+| DigitalOcean | `doctl` | `doctl auth init` |
+| Google Cloud, Firebase | `gcloud` | `gcloud auth login` |
+| Azure App Service | `az` | `az login` |
+| EAS / Expo | `eas` | `eas login` |
+| Bitbucket Cloud, Cloudflare | none | API token entered in the app; see [Supported monitoring](#supported-monitoring) |
 
-```sh
-pnpm desktop:build
-```
+Apps opened from Finder or at login do not inherit shell `PATH`, so CLIs are searched in `PATH`, common install directories (Homebrew, `~/.local/bin`, npm/pnpm/Volta globals, asdf/mise shims), and nvm Node versions under `$NVM_DIR` (default `~/.nvm`): the `default` alias first, then the other installed versions, newest first. A discovered CLI runs with its own directory first in `PATH`, so nvm-installed Node CLIs use the matching `node`. Other version managers (fnm, nodenv, n) need the CLI and, for Node-based CLIs, `node` linked into one of these directories, such as `~/.local/bin`. The default-alias match does not follow every nvm alias form; unresolved aliases fall back to the newest installed version.
 
-Packages are written to `src-tauri/target/release/bundle/`. Build macOS apps on macOS and Windows installers on Windows. The repository contains CI configuration for macOS Apple Silicon, macOS Intel, and Windows x64; that is catalog/configuration only, not evidence of remote builds or published installers.
+### Update
+
+Automatic updates are not configured. To update, right-click the menu-bar icon and choose **Quit**, download the newer DMG, and replace the app in Applications. Settings, connections, and notification rules are kept. Upgrading from crowline: install ratelline, start it once so it copies your settings, then delete `/Applications/crowline.app`.
+
+### Uninstall
+
+1. Remove Bitbucket and Cloudflare connections in **Settings → Connections** first; this deletes their tokens from the Keychain. CLI sign-ins belong to each CLI and are not touched.
+2. Quit ratelline and delete `/Applications/ratelline.app`.
+3. To remove settings too, delete `~/Library/Application Support/io.ratelline.desktop`, and `io.crowline.desktop` in the same folder if you upgraded from crowline.
+
+## Quick start
+
+1. **Open the panel.** Click the ratel in the menu bar for recent runs. Right-click it for **Show Panel**, **Open Dashboard**, **Refresh**, and **Quit**.
+2. **Connect a service.** Open the dashboard, go to **Settings → Connections**, choose a service, and connect an account. For CLI services, pick an account already signed in to that CLI.
+3. **Pick projects.** Search and select the projects or repositories to monitor. Choices apply immediately.
+4. **Choose whose runs to show.** Set **My runs** or **All runs** per service or project. Runs whose actor is unknown appear only under **All runs**.
+5. **Set notifications.** In **Settings → Notifications**, for each project choose **Off / My runs / All runs**, then which results notify you. Allow ratelline's notifications in macOS when asked.
+6. **Tune the menu bar.** In **Settings → Menu bar**, choose visible services and projects, rows per section, and whether the ratel walks while runs are in progress.
+
+The sections below describe each step in detail.
 
 ## Connect accounts
 
@@ -81,8 +108,6 @@ Existing connection IDs, selected targets, aliases and notification rules are pr
 ## Supported monitoring
 
 ratelline prefers installed official CLIs, retains AWS SDK shared-profile access and Bitbucket API-token access, and bundles no provider executable or Node runtime. It requires no deployment hooks or project instrumentation.
-
-Apps opened from Finder or at login do not inherit shell `PATH`, so CLIs are searched in `PATH`, common install directories (Homebrew, `~/.local/bin`, npm/pnpm/Volta globals, asdf/mise shims), and nvm Node versions under `$NVM_DIR` (default `~/.nvm`): the `default` alias first, then the other installed versions, newest first. A discovered CLI runs with its own directory first in `PATH`, so nvm-installed Node CLIs use the matching `node`. Other version managers (fnm, nodenv, n) need the CLI and, for Node-based CLIs, `node` linked into one of these directories, such as `~/.local/bin`. The default-alias match does not follow every nvm alias form; unresolved aliases fall back to the newest installed version.
 
 | Platform                                      | Monitoring                                     | Limits                                                                                                              |
 | --------------------------------------------- | ---------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -145,7 +170,28 @@ The [2026-10-04 product QA report](docs/qa-2026-10-04.md) records selection late
 
 The [2026-10-06 evolution and UX QA report](docs/qa-2026-10-06.md) records query freshness, execution investigation, connection guidance, and menu-bar interaction fixes, with separate automated and native verification limits.
 
-## Development checks
+## Development
+
+### Setup and run
+
+Node.js 22.23.3 or later, pnpm 10, and Rust stable are required. Install [Tauri platform prerequisites](https://v2.tauri.app/start/prerequisites/) (Xcode Command Line Tools on macOS; Microsoft C++ Build Tools and WebView2 on Windows).
+
+```sh
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
+pnpm install --frozen-lockfile
+pnpm tauri dev
+```
+
+### Build
+
+```sh
+pnpm desktop:build
+```
+
+Packages are written to `src-tauri/target/release/bundle/`. Build macOS apps on macOS and Windows installers on Windows. The repository contains CI configuration for macOS Apple Silicon, macOS Intel, and Windows x64; that is catalog/configuration only, not evidence of remote builds or published installers.
+
+### Checks
 
 ```sh
 pnpm check

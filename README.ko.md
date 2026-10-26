@@ -10,7 +10,7 @@ ratelline은 배포 라인을 겁 없이 순찰하는 메뉴 막대·시스템 �
 
 > AI와 함께 만들었습니다. 방향을 정하고 제 계정으로 연동을 확인한 것은 저이고, 코드·테스트·문서는 [Claude Code](https://claude.com/claude-code)와의 세션에서 작성했습니다. [왜 만들었나](#왜-만들었나)를 참고하세요.
 
-**다운로드:** 서명·공증된 macOS 빌드(Apple Silicon·Intel)는 [Releases 페이지](https://github.com/likeratel/ratelline/releases)에 있습니다. Windows 설치 파일은 아직 공개하지 않았습니다.
+**다운로드:** 서명·공증된 macOS 빌드(Apple Silicon·Intel)는 [Releases 페이지](https://github.com/likeratel/ratelline/releases/latest)에 있습니다. [설치](#설치)와 [빠른 시작](#빠른-시작)을 참고하세요. Windows 설치 파일은 아직 공개하지 않았습니다.
 
 > **검증 범위.** GitHub Actions, Vercel, Bitbucket Cloud는 실제 계정으로 동작을 확인했습니다. 나머지 서비스는 공식 CLI·API 문서를 기준으로 가상 데이터를 사용한 명령 계약 테스트만 거쳤고, 실계정 검증은 하지 않았습니다. [서비스 검증 기록](docs/provider-verification.md)과 [2026-10-06 제품 리뷰](docs/product-review-2026-10-06.md)를 참고하세요.
 
@@ -49,24 +49,51 @@ ratelline은 배포 라인을 겁 없이 순찰하는 메뉴 막대·시스템 �
 
 </details>
 
-## 개발 환경에서 실행
+## 설치
 
-Node.js 22.23.3 이상, pnpm 10, Rust stable이 필요합니다. macOS에는 Xcode Command Line Tools, Windows에는 Microsoft C++ Build Tools와 WebView2 등 [Tauri 필수 도구](https://v2.tauri.app/start/prerequisites/)를 준비합니다.
+Apple Silicon 또는 Intel Mac의 macOS 12 이상이 필요합니다. Windows·Linux 설치 파일은 공개하지 않습니다. Windows는 소스에서 빌드할 수 있고([개발](#개발) 참고), Linux 빌드는 검증하지 않았습니다.
 
-```sh
-git clone https://github.com/likeratel/ratelline.git
-cd ratelline
-pnpm install --frozen-lockfile
-pnpm tauri dev
-```
+1. [Releases 페이지](https://github.com/likeratel/ratelline/releases/latest)에서 최신 `ratelline_<version>_universal.dmg`를 내려받습니다. 각 릴리스에 파일의 SHA-256이 적혀 있으며 `shasum -a 256 <file>.dmg`로 확인할 수 있습니다.
+2. DMG를 열고 **ratelline**을 **Applications**로 끌어다 놓습니다.
+3. Applications에서 ratelline을 엽니다. 앱은 Developer ID로 서명되고 공증되어 있어 macOS 보안 설정을 우회하지 않고 열립니다. 메뉴 막대에서만 실행되며 Dock 아이콘은 없습니다.
+4. 모니터링할 서비스마다 공식 CLI를 설치하고 로그인합니다. ratelline은 서비스 도구를 동봉하지 않으며 CLI 인증 정보를 저장하지 않습니다.
 
-## 빌드
+| 서비스 | CLI | 로그인 |
+| --- | --- | --- |
+| GitHub Actions, GitHub Deployments | `gh` | `gh auth login` |
+| Vercel | `vercel` | `vercel login` 또는 앱의 **브라우저로 로그인** |
+| AWS | `aws` (v2) | `aws configure` 또는 `aws sso login --profile <name>`. 앱에서 프로필의 SSO 로그인을 시작할 수 있음 |
+| Railway / Netlify / Render / Heroku | `railway` / `netlify` / `render` / `heroku` | `<cli> login` |
+| Fly.io | `fly` 또는 `flyctl` | `fly auth login` |
+| GitLab.com | `glab` | `glab auth login` |
+| DigitalOcean | `doctl` | `doctl auth init` |
+| Google Cloud, Firebase | `gcloud` | `gcloud auth login` |
+| Azure App Service | `az` | `az login` |
+| EAS / Expo | `eas` | `eas login` |
+| Bitbucket Cloud, Cloudflare | 없음 | 앱에 API 토큰 입력. [지원 범위](#지원-범위) 참고 |
 
-```sh
-pnpm desktop:build
-```
+Finder나 로그인 시 실행한 앱은 셸의 `PATH`를 상속하지 않습니다. 그래서 CLI는 `PATH`, 일반적인 설치 디렉터리(Homebrew, `~/.local/bin`, npm/pnpm/Volta 전역, asdf/mise shim), `$NVM_DIR`(기본 `~/.nvm`) 아래 nvm Node 버전에서 찾습니다. nvm은 `default` 별칭을 먼저, 그다음 설치된 다른 버전을 최신순으로 확인합니다. 찾은 CLI는 자기 디렉터리를 `PATH` 맨 앞에 두고 실행하므로 nvm으로 설치한 Node CLI는 같은 버전의 `node`를 사용합니다. 다른 버전 관리자(fnm, nodenv, n)는 CLI와, Node 기반 CLI라면 `node`를 `~/.local/bin` 같은 이 디렉터리 중 하나에 연결해야 합니다. 기본 별칭 매칭은 nvm의 모든 별칭 형식을 따라가지 않으며, 해석하지 못한 별칭은 설치된 최신 버전으로 대체합니다.
 
-패키지는 `src-tauri/target/release/bundle/`에 만듭니다. macOS 앱은 macOS에서, Windows 설치 파일은 Windows에서 빌드합니다. 저장소의 다중 플랫폼 CI 설정은 원격 빌드나 공개 설치 파일이 있다는 근거가 아닙니다.
+### 업데이트
+
+자동 업데이트는 설정되어 있지 않습니다. 업데이트하려면 메뉴 막대 아이콘을 오른쪽 클릭해 **종료**를 선택하고, 새 DMG를 내려받아 Applications의 앱을 교체합니다. 설정, 연결, 알림 규칙은 유지됩니다. crowline에서 업그레이드한다면 ratelline을 설치해 한 번 실행해 설정을 복사한 뒤 `/Applications/crowline.app`을 삭제합니다.
+
+### 삭제
+
+1. 먼저 **설정 → 서비스 연결**에서 Bitbucket과 Cloudflare 연결을 제거합니다. 키체인에서 해당 토큰이 삭제됩니다. CLI 로그인은 각 CLI의 것이므로 건드리지 않습니다.
+2. ratelline을 종료하고 `/Applications/ratelline.app`을 삭제합니다.
+3. 설정도 지우려면 `~/Library/Application Support/io.ratelline.desktop`을 삭제합니다. crowline에서 업그레이드했다면 같은 폴더의 `io.crowline.desktop`도 삭제합니다.
+
+## 빠른 시작
+
+1. **패널 열기.** 메뉴 막대의 라텔을 클릭하면 최근 실행이 보입니다. 오른쪽 클릭하면 **패널 보기**, **대시보드 열기**, **새로고침**, **종료**가 나옵니다.
+2. **서비스 연결.** 대시보드를 열고 **설정 → 서비스 연결**에서 서비스를 고른 뒤 계정을 연결합니다. CLI 서비스는 해당 CLI에 이미 로그인된 계정을 선택합니다.
+3. **프로젝트 선택.** 모니터링할 프로젝트나 저장소를 검색해 선택합니다. 선택은 즉시 적용됩니다.
+4. **표시할 실행 선택.** 서비스나 프로젝트마다 **내 실행** 또는 **전체 실행**을 정합니다. 실행자를 알 수 없는 실행은 **전체 실행**에만 나타납니다.
+5. **알림 설정.** **설정 → 알림**에서 프로젝트마다 **끔 / 내 실행 / 전체 실행**을 고르고 알림을 받을 결과를 정합니다. 요청이 나타나면 macOS에서 ratelline의 알림을 허용합니다.
+6. **메뉴 막대 조정.** **설정 → 메뉴 막대**에서 표시할 서비스와 프로젝트, 영역별 행 수, 진행 중인 실행이 있을 때 라텔이 걷는지 여부를 정합니다.
+
+아래 섹션에서 각 단계를 자세히 설명합니다.
 
 ## 계정과 대상 연결
 
@@ -143,7 +170,28 @@ Cloudflare 토큰은 OS 자격 증명 저장소에 보관합니다. Pages에는 
 
 [2026-10-06 제품 개선·UX 검증 기록](docs/qa-2026-10-06.md)에 조회 최신성, 실행 상세, 연결 동선과 상태바 동작 수정을 정리했습니다. 자동 검사와 네이티브 실동작 검증의 한계를 구분합니다.
 
-## 개발 확인
+## 개발
+
+### 설정과 실행
+
+Node.js 22.23.3 이상, pnpm 10, Rust stable이 필요합니다. macOS에는 Xcode Command Line Tools, Windows에는 Microsoft C++ Build Tools와 WebView2 등 [Tauri 필수 도구](https://v2.tauri.app/start/prerequisites/)를 준비합니다.
+
+```sh
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
+pnpm install --frozen-lockfile
+pnpm tauri dev
+```
+
+### 빌드
+
+```sh
+pnpm desktop:build
+```
+
+패키지는 `src-tauri/target/release/bundle/`에 만듭니다. macOS 앱은 macOS에서, Windows 설치 파일은 Windows에서 빌드합니다. 저장소에는 macOS Apple Silicon, macOS Intel, Windows x64용 CI 설정이 있으며, 이는 카탈로그·설정일 뿐 원격 빌드나 공개 설치 파일이 있다는 근거가 아닙니다.
+
+### 확인
 
 ```sh
 pnpm check

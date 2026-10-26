@@ -1,6 +1,6 @@
 [package]
 name = "ratelline"
-version = "0.1.0"
+version = "0.1.1"
 description = "Personal deployment monitoring for the menu bar and system tray"
 license = "MIT"
 repository = "https://github.com/likeratel/ratelline"

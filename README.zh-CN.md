@@ -10,7 +10,7 @@ ratelline 是在菜单栏和系统托盘中无畏巡视部署线的监视者。�
 
 > 与 AI 一起完成。方向由我决定，集成也是用我自己的账号验证的；代码、测试和文档则是在与 [Claude Code](https://claude.com/claude-code) 的会话中编写的。参见[为什么做这个](#为什么做这个)。
 
-**下载：** 已签名并公证的 macOS 版本（Apple Silicon 和 Intel）见 [Releases 页面](https://github.com/likeratel/ratelline/releases)。Windows 安装包尚未发布。
+**下载：** 已签名并公证的 macOS 版本（Apple Silicon 和 Intel）见 [Releases 页面](https://github.com/likeratel/ratelline/releases/latest)。参见[安装](#安装)和[快速开始](#快速开始)。Windows 安装包尚未发布。
 
 > **验证范围。** GitHub Actions、Vercel 和 Bitbucket Cloud 已使用真实账号验证。其他服务仅依据官方 CLI/API 文档，使用虚构数据完成命令契约测试，未经真实账号验证。详见[服务验证记录](docs/provider-verification.md)和 [2026-10-06 产品评审](docs/product-review-2026-10-06.md)。
 
@@ -49,28 +49,55 @@ ratelline 是在菜单栏和系统托盘中无畏巡视部署线的监视者。�
 
 </details>
 
-## 开发环境与运行
+## 安装
 
-需要 Node.js 22.23.3 或更高版本、pnpm 10 与 Rust stable。macOS 需 Xcode Command Line Tools，Windows 需 Microsoft C++ Build Tools、WebView2 等 [Tauri 前置条件](https://v2.tauri.app/start/prerequisites/)。
+需要 macOS 12 或更高版本，支持 Apple Silicon 或 Intel。未发布 Windows 或 Linux 安装包。Windows 可从源码构建（参见[开发](#开发)）；Linux 构建未经验证。
 
-```sh
-git clone https://github.com/likeratel/ratelline.git
-cd ratelline
-pnpm install --frozen-lockfile
-pnpm tauri dev
-```
+1. 从 [Releases 页面](https://github.com/likeratel/ratelline/releases/latest)下载最新的 `ratelline_<version>_universal.dmg`。每个版本都会列出该文件的 SHA-256；可用 `shasum -a 256 <file>.dmg` 校验。
+2. 打开 DMG，将 **ratelline** 拖到 **应用程序**。
+3. 从“应用程序”打开 ratelline。应用已使用 Developer ID 签名并经过公证，因此 macOS 无需绕过安全提示即可打开。它只在菜单栏中运行，不显示 Dock 图标。
+4. 为每个要监控的服务安装并登录官方 CLI。ratelline 不捆绑任何服务商工具，也不保存 CLI 凭据。
 
-## 构建
+| 服务 | CLI | 登录 |
+| --- | --- | --- |
+| GitHub Actions、GitHub Deployments | `gh` | `gh auth login` |
+| Vercel | `vercel` | `vercel login`，或在应用中点击 **通过浏览器登录** |
+| AWS | `aws`（v2） | `aws configure` 或 `aws sso login --profile <name>`；应用可为某个配置文件启动 SSO 登录 |
+| Railway / Netlify / Render / Heroku | `railway` / `netlify` / `render` / `heroku` | `<cli> login` |
+| Fly.io | `fly` 或 `flyctl` | `fly auth login` |
+| GitLab.com | `glab` | `glab auth login` |
+| DigitalOcean | `doctl` | `doctl auth init` |
+| Google Cloud、Firebase | `gcloud` | `gcloud auth login` |
+| Azure App Service | `az` | `az login` |
+| EAS / Expo | `eas` | `eas login` |
+| Bitbucket Cloud、Cloudflare | 无 | 在应用中输入 API 令牌；参见[已支持的监控](#已支持的监控) |
 
-```sh
-pnpm desktop:build
-```
+从 Finder 或登录时启动的应用不会继承 shell 的 `PATH`，因此会在 `PATH`、常见安装目录（Homebrew、`~/.local/bin`、npm/pnpm/Volta 全局目录、asdf/mise shims）以及 `$NVM_DIR`（默认 `~/.nvm`）下的 nvm Node 版本中查找 CLI：先查 `default` 别名，再按从新到旧的顺序查其他已安装版本。找到的 CLI 运行时会把它自己所在目录放在 `PATH` 最前面，因此通过 nvm 安装的 Node CLI 会使用匹配的 `node`。其他版本管理器（fnm、nodenv、n）需要把 CLI 以及（对基于 Node 的 CLI）`node` 链接到上述目录之一，例如 `~/.local/bin`。默认别名匹配并不覆盖所有 nvm 别名形式；无法解析的别名会回退到最新的已安装版本。
 
-包生成在 `src-tauri/target/release/bundle/`。请在 macOS 构建 macOS 应用，在 Windows 构建 Windows 安装程序。仓库中的多平台 CI 配置仅是配置，不能证明远程构建或公开安装包已经存在。
+### 更新
+
+未配置自动更新。更新时，右键点击菜单栏图标并选择 **退出**，下载较新的 DMG，并替换“应用程序”中的应用。设置、连接和通知规则会保留。从 crowline 升级时，请先安装 ratelline 并启动一次以复制设置，然后删除 `/Applications/crowline.app`。
+
+### 卸载
+
+1. 先在 **设置 → 服务连接** 中移除 Bitbucket 和 Cloudflare 连接；这会从钥匙串中删除它们的令牌。CLI 登录属于各个 CLI，不会受影响。
+2. 退出 ratelline，删除 `/Applications/ratelline.app`。
+3. 如需同时删除设置，请删除 `~/Library/Application Support/io.ratelline.desktop`；如果是从 crowline 升级的，也请删除同一文件夹中的 `io.crowline.desktop`。
+
+## 快速开始
+
+1. **打开面板。** 点击菜单栏中的蜜獾查看最近的执行记录。右键点击它可选择 **显示面板**、**打开仪表板**、**刷新** 和 **退出**。
+2. **连接服务。** 打开仪表板，进入 **设置 → 服务连接**，选择服务并连接账号。对于 CLI 服务，请选择已登录该 CLI 的账号。
+3. **选择项目。** 搜索并选择要监控的项目或仓库。选择立即生效。
+4. **选择显示谁的运行。** 按服务或项目设置 **我的运行** 或 **所有运行**。执行者未知的运行只出现在 **所有运行** 中。
+5. **设置通知。** 在 **设置 → 通知** 中，为每个项目选择 **关闭 / 我的运行 / 所有运行**，再选择哪些结果会通知你。系统询问时，请在 macOS 中允许 ratelline 发送通知。
+6. **调整菜单栏。** 在 **设置 → 菜单栏** 中，选择显示的服务和项目、每个区域的行数，以及有运行进行中时蜜獾是否走动。
+
+下面各节会详细说明每个步骤。
 
 ## 连接账号和选择项目
 
-打开 **设置 → 连接**，选择服务并连接账号，再选择要监控的项目。项目选择立即生效；通过账户旁的“编辑别名”修改名称后，点击保存并查看完成状态。 可一次性全选或取消选择当前搜索结果，不会改变被搜索条件隐藏的项目或其他账号的选择。
+打开 **设置 → 服务连接**，选择服务并连接账号，再选择要监控的项目。项目选择立即生效；通过账户旁的“编辑别名”修改名称后，点击保存并查看完成状态。 可一次性全选或取消选择当前搜索结果，不会改变被搜索条件隐藏的项目或其他账号的选择。
 
 显示范围按应用默认 → 服务 → 项目继承，项目设置优先。“我的运行 / 所有运行”同时应用于仪表板、历史和菜单栏，通知规则独立。新监控项目默认启用“我的运行 · 所有结果”通知规则，不改变现有规则和全局通知开关。别名使用保存和取消按钮，并显示保存完成状态。批量选择按钮在“全选 / 取消全选”之间切换，仅作用于当前搜索结果。[服务验证记录](docs/provider-verification.md)区分命令契约测试与真实账户查询。
 
@@ -103,7 +130,7 @@ Cloudflare 令牌保存在 OS 凭据存储中。Pages 需要 **Cloudflare Pages 
 
 ### Bitbucket Cloud
 
-在 **设置 → 连接 → Bitbucket** 中输入 Atlassian 邮箱和 [API 令牌](https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/)，再选择要监控的仓库。令牌需要 `read:user:bitbucket`、`read:workspace:bitbucket`、`read:repository:bitbucket` 和 `read:pipeline:bitbucket` 权限，无需安装 CLI。默认账号名称来自 Bitbucket，也可点击铅笔设置别名。通过 **更换令牌** 更新同一账号的凭据时，会保留已选仓库。
+在 **设置 → 服务连接 → Bitbucket** 中输入 Atlassian 邮箱和 [API 令牌](https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/)，再选择要监控的仓库。令牌需要 `read:user:bitbucket`、`read:workspace:bitbucket`、`read:repository:bitbucket` 和 `read:pipeline:bitbucket` 权限，无需安装 CLI。默认账号名称来自 Bitbucket，也可点击铅笔设置别名。通过 **更换令牌** 更新同一账号的凭据时，会保留已选仓库。
 
 凭据仅保存在系统凭据存储中，不会写入设置文件、日志或安装包。删除 Bitbucket 连接时，也会删除对应凭据。菜单栏显示和项目通知沿用现有设置。无法确认执行者的 Pipeline 会标为未知，不计入“我的执行”。已于 2026-10-02 验证现有连接下 3 个仓库的最近执行及进行中状态查询。新账号连接流程仍未验证，自动测试使用虚构数据。
 
@@ -143,7 +170,28 @@ Cloudflare 令牌保存在 OS 凭据存储中。Pages 需要 **Cloudflare Pages 
 
 [2026-10-06产品改进与UX验证记录](docs/qa-2026-10-06.md)涵盖查询新鲜度、运行详情、连接流程和菜单栏交互修复，并分别说明自动测试与原生验证的范围和限制。
 
-## 开发检查
+## 开发
+
+### 环境与运行
+
+需要 Node.js 22.23.3 或更高版本、pnpm 10 与 Rust stable。macOS 需 Xcode Command Line Tools，Windows 需 Microsoft C++ Build Tools、WebView2 等 [Tauri 前置条件](https://v2.tauri.app/start/prerequisites/)。
+
+```sh
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
+pnpm install --frozen-lockfile
+pnpm tauri dev
+```
+
+### 构建
+
+```sh
+pnpm desktop:build
+```
+
+包生成在 `src-tauri/target/release/bundle/`。请在 macOS 构建 macOS 应用，在 Windows 构建 Windows 安装程序。仓库中的多平台 CI 配置仅是配置，不能证明远程构建或公开安装包已经存在。
+
+### 检查
 
 ```sh
 pnpm check

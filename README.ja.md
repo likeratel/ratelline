@@ -10,7 +10,7 @@ ratelline はデプロイラインを恐れずに見回るメニューバー・�
 
 > AI と一緒に作りました。方向性を決め、自分のアカウントで連携を確認したのは私で、コード・テスト・ドキュメントは [Claude Code](https://claude.com/claude-code) とのセッションで書きました。[なぜ作ったか](#なぜ作ったか)を参照してください。
 
-**ダウンロード:** 署名・公証済みの macOS ビルド（Apple Silicon・Intel）は [Releases ページ](https://github.com/likeratel/ratelline/releases)にあります。Windows インストーラーはまだ公開していません。
+**ダウンロード:** 署名・公証済みの macOS ビルド（Apple Silicon・Intel）は [Releases ページ](https://github.com/likeratel/ratelline/releases/latest)にあります。[インストール](#インストール)と[クイックスタート](#クイックスタート)を参照してください。Windows インストーラーはまだ公開していません。
 
 > **検証範囲。** GitHub Actions、Vercel、Bitbucket Cloud は実際のアカウントで動作を確認しています。その他のサービスは公式 CLI・API ドキュメントに基づき、架空データによるコマンド契約テストのみを行っており、実アカウントでの検証はしていません。[プロバイダー検証記録](docs/provider-verification.md)と [2026-10-06 の製品レビュー](docs/product-review-2026-10-06.md)を参照してください。
 
@@ -49,28 +49,55 @@ ratelline はデプロイラインを恐れずに見回るメニューバー・�
 
 </details>
 
-## 開発環境で実行
+## インストール
 
-Node.js 22.23.3 以降、pnpm 10、Rust stable が必要です。macOS は Xcode Command Line Tools、Windows は Microsoft C++ Build Tools と WebView2 などの [Tauri 前提条件](https://v2.tauri.app/start/prerequisites/)を準備してください。
+Apple Silicon または Intel の macOS 12 以降が必要です。Windows・Linux 用インストーラーは公開していません。Windows はソースからビルドできます（[開発](#開発)を参照）。Linux でのビルドは検証していません。
 
-```sh
-git clone https://github.com/likeratel/ratelline.git
-cd ratelline
-pnpm install --frozen-lockfile
-pnpm tauri dev
-```
+1. [Releases ページ](https://github.com/likeratel/ratelline/releases/latest)から最新の `ratelline_<version>_universal.dmg` をダウンロードします。各リリースにはファイルの SHA-256 が記載されているので、`shasum -a 256 <file>.dmg` で確認してください。
+2. DMG を開き、**ratelline** を **Applications** にドラッグします。
+3. Applications から ratelline を開きます。アプリは Developer ID 署名と公証済みなので、macOS のセキュリティ設定を回避せずに開けます。メニューバーだけで動作し、Dock アイコンはありません。
+4. 監視したいサービスごとに公式 CLI をインストールしてサインインします。ratelline はサービスのツールを同梱せず、CLI の認証情報も保存しません。
 
-## ビルド
+| サービス | CLI | サインイン |
+| --- | --- | --- |
+| GitHub Actions、GitHub Deployments | `gh` | `gh auth login` |
+| Vercel | `vercel` | `vercel login`、またはアプリの**ブラウザでログイン** |
+| AWS | `aws`（v2） | `aws configure` または `aws sso login --profile <name>`。アプリからプロファイルの SSO サインインを開始することもできます |
+| Railway / Netlify / Render / Heroku | `railway` / `netlify` / `render` / `heroku` | `<cli> login` |
+| Fly.io | `fly` または `flyctl` | `fly auth login` |
+| GitLab.com | `glab` | `glab auth login` |
+| DigitalOcean | `doctl` | `doctl auth init` |
+| Google Cloud、Firebase | `gcloud` | `gcloud auth login` |
+| Azure App Service | `az` | `az login` |
+| EAS / Expo | `eas` | `eas login` |
+| Bitbucket Cloud、Cloudflare | なし | アプリで API トークンを入力。[対応監視](#対応監視)を参照 |
 
-```sh
-pnpm desktop:build
-```
+Finder やログイン時に開いたアプリはシェルの `PATH` を引き継がないため、CLI は `PATH`、一般的なインストール先（Homebrew、`~/.local/bin`、npm/pnpm/Volta のグローバル、asdf/mise の shim）、`$NVM_DIR`（既定 `~/.nvm`）配下の nvm Node バージョンの順で探します。nvm では `default` エイリアスを先に、その後にインストール済みのほかのバージョンを新しい順に探します。見つかった CLI は自身のディレクトリを `PATH` の先頭にして実行するため、nvm でインストールした Node 製 CLI は対応する `node` を使います。ほかのバージョン管理ツール（fnm、nodenv、n）では、CLI と、Node 製 CLI の場合は `node` を `~/.local/bin` などこれらのディレクトリのいずれかにリンクしてください。`default` エイリアスの照合はすべての nvm エイリアス形式には対応しておらず、解決できないエイリアスはインストール済みの最新バージョンにフォールバックします。
 
-パッケージは `src-tauri/target/release/bundle/` に作成されます。macOS アプリは macOS、Windows インストーラーは Windows でビルドします。リポジトリのマルチプラットフォーム CI 設定は、リモートビルドや公開インストーラーの証拠ではありません。
+### アップデート
+
+自動更新は設定していません。更新するには、メニューバーのアイコンを右クリックして**終了**を選び、新しい DMG をダウンロードして Applications のアプリを置き換えます。設定、接続、通知ルールは保持されます。crowline からアップグレードする場合は、ratelline をインストールして一度起動し、設定をコピーしてから `/Applications/crowline.app` を削除します。
+
+### アンインストール
+
+1. 先に **設定 → サービス接続**で Bitbucket と Cloudflare の接続を削除します。キーチェーンからこれらのトークンが削除されます。CLI のサインインは各 CLI のものであり、変更されません。
+2. ratelline を終了し、`/Applications/ratelline.app` を削除します。
+3. 設定も削除する場合は、`~/Library/Application Support/io.ratelline.desktop` を削除します。crowline からアップグレードした場合は、同じフォルダーの `io.crowline.desktop` も削除します。
+
+## クイックスタート
+
+1. **パネルを開く。** メニューバーのラーテルをクリックすると最近の実行が表示されます。右クリックすると**パネルを表示**、**ダッシュボードを開く**、**更新**、**終了**を選べます。
+2. **サービスを接続する。** ダッシュボードを開き、**設定 → サービス接続**でサービスを選んでアカウントを接続します。CLI サービスでは、その CLI にすでにサインインしているアカウントを選びます。
+3. **プロジェクトを選ぶ。** 監視するプロジェクトやリポジトリを検索して選択します。選択はすぐに反映されます。
+4. **誰の実行を表示するか選ぶ。** サービスまたはプロジェクトごとに**自分の実行**か**すべての実行**を設定します。実行者が不明な実行は**すべての実行**にだけ表示されます。
+5. **通知を設定する。** **設定 → 通知**でプロジェクトごとに**オフ / 自分の実行 / すべての実行**を選び、続けて通知する結果を選びます。求められたら macOS で ratelline の通知を許可してください。
+6. **メニューバーを調整する。** **設定 → メニューバー**で、表示するサービスとプロジェクト、各欄の行数、実行中にラーテルを歩かせるかどうかを選びます。
+
+以下の各セクションで、それぞれの手順を詳しく説明します。
 
 ## 接続と対象選択
 
-**設定 → 接続**でサービスとアカウントを選び、監視するプロジェクトを指定します。プロジェクト選択はすぐに反映されます。アカウントの別名は編集後に保存ボタンで確定し、完了表示を確認できます。 検索結果をまとめて選択・解除できます。検索で非表示になった項目や、別のアカウントの選択は変わりません。
+**設定 → サービス接続**でサービスとアカウントを選び、監視するプロジェクトを指定します。プロジェクト選択はすぐに反映されます。アカウントの別名は編集後に保存ボタンで確定し、完了表示を確認できます。 検索結果をまとめて選択・解除できます。検索で非表示になった項目や、別のアカウントの選択は変わりません。
 
 表示範囲はアプリ既定値 → サービス → プロジェクトの順で継承し、プロジェクト設定を優先します。「自分の実行 / すべての実行」はダッシュボード・履歴・メニューバー共通です。通知ルールは独立しています。新規監視プロジェクトは「自分の実行・すべての結果」の通知ルールが有効になり、既存ルールと全体の通知スイッチは保持します。別名は保存・キャンセル操作と保存完了表示を備えます。一括選択は検索結果に対する「すべて選択 / すべて解除」の切り替えです。[サービス検証の根拠](docs/provider-verification.md)は契約テストと実アカウント検証を区別しています。
 
@@ -103,7 +130,7 @@ Cloudflare トークンは OS の資格情報ストアに保存します。Pages
 
 ### Bitbucket Cloud
 
-**設定 → 接続 → Bitbucket** で Atlassian のメールアドレスと [API トークン](https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/)を入力し、監視するリポジトリを選択します。必要な権限は `read:user:bitbucket`、`read:workspace:bitbucket`、`read:repository:bitbucket`、`read:pipeline:bitbucket` です。CLI のインストールは不要です。アカウント名は Bitbucket から取得し、鉛筆ボタンで表示名を変更できます。**トークンを変更**すると、監視対象を保持したまま同じアカウントの認証情報を更新できます。
+**設定 → サービス接続 → Bitbucket** で Atlassian のメールアドレスと [API トークン](https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/)を入力し、監視するリポジトリを選択します。必要な権限は `read:user:bitbucket`、`read:workspace:bitbucket`、`read:repository:bitbucket`、`read:pipeline:bitbucket` です。CLI のインストールは不要です。アカウント名は Bitbucket から取得し、鉛筆ボタンで表示名を変更できます。**トークンを変更**すると、監視対象を保持したまま同じアカウントの認証情報を更新できます。
 
 認証情報は OS の資格情報ストアに保管し、設定ファイル・ログ・インストーラーには含めません。Bitbucket 接続を削除すると、保存した認証情報も削除されます。メニューバー表示とプロジェクト別通知は既存の設定を使います。実行者を確認できない Pipeline は不明として扱い、自分の実行には含めません。2026-10-02 に接続済みの3リポジトリで最近の実行と進行状況の取得を確認しました。新規アカウントの接続手順は未検証で、自動テストには架空のデータを使用しています。
 
@@ -143,7 +170,28 @@ Cloudflare トークンは OS の資格情報ストアに保存します。Pages
 
 [2026-10-06の改善・UX検証記録](docs/qa-2026-10-06.md)に、取得結果の鮮度、実行詳細、接続フロー、メニューバー操作の修正と、自動テスト・ネイティブ検証それぞれの限界を記載しています。
 
-## 開発確認
+## 開発
+
+### セットアップと実行
+
+Node.js 22.23.3 以降、pnpm 10、Rust stable が必要です。macOS は Xcode Command Line Tools、Windows は Microsoft C++ Build Tools と WebView2 などの [Tauri 前提条件](https://v2.tauri.app/start/prerequisites/)を準備してください。
+
+```sh
+git clone https://github.com/likeratel/ratelline.git
+cd ratelline
+pnpm install --frozen-lockfile
+pnpm tauri dev
+```
+
+### ビルド
+
+```sh
+pnpm desktop:build
+```
+
+パッケージは `src-tauri/target/release/bundle/` に作成されます。macOS アプリは macOS、Windows インストーラーは Windows でビルドします。リポジトリのマルチプラットフォーム CI 設定は、リモートビルドや公開インストーラーの証拠ではありません。
+
+### 確認
 
 ```sh
 pnpm check
