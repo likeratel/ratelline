@@ -549,12 +549,27 @@ pub(crate) fn dispatch_native<R: Runtime>(
             "Notifications are enabled, but system permission has not been granted.".into(),
         );
     }
-    api.builder()
-        .title(&notification.title)
-        .body(&notification.body)
-        .show()
-        .map_err(|error| format!("A system notification could not be delivered: {error}"))
+    #[cfg(target_os = "macos")]
+    {
+        macos_delivery::deliver(
+            &app.config().identifier,
+            &notification.title,
+            &notification.body,
+        )
+    }
+    #[cfg(not(target_os = "macos"))]
+    {
+        api.builder()
+            .title(&notification.title)
+            .body(&notification.body)
+            .show()
+            .map_err(|error| format!("A system notification could not be delivered: {error}"))
+    }
 }
+
+#[cfg(target_os = "macos")]
+#[path = "notifications/macos_delivery.rs"]
+mod macos_delivery;
 
 #[cfg(test)]
 #[path = "notifications/tests.rs"]

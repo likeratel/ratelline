@@ -47,6 +47,8 @@ sys-locale = "0.3"
 [target.'cfg(target_os = "macos")'.dependencies]
 # Reads the system "Reduce motion" accessibility setting for the tray animation.
 objc2-app-kit = { version = "0.3", default-features = false, features = ["std", "NSAccessibility", "NSWorkspace"] }
+# Sends notifications from one thread; the notification plugin uses the same crate.
+notify-rust = "4.18"
 
 
 # Read the optimization guideline for more details: https://tauri.app/concept/size/#cargo-configuration
@@ -55,4 +57,5 @@ codegen-units = 1
 lto = true
 opt-level = 3
 panic = "abort"
-strip = true
+# Keep symbol names (not debug info) so macOS crash reports show function names.
+strip = "debuginfo"

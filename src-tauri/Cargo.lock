@@ -3787,6 +3787,7 @@ dependencies = [
  "chrono",
  "futures",
  "keyring",
+ "notify-rust",
  "objc2-app-kit",
  "reqwest 0.12.28",
  "serde",
