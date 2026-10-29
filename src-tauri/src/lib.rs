@@ -1,6 +1,7 @@
 mod cli;
 mod cloudflare_credentials;
 mod commands;
+mod credential_store;
 mod credentials;
 mod desktop;
 mod legacy_keyring;
@@ -36,6 +37,7 @@ pub fn run() {
             app.set_activation_policy(tauri::ActivationPolicy::Accessory);
             let app_data_dir = app.path().app_data_dir()?;
             legacy_migration::migrate_app_data_dir(&app_data_dir);
+            let credentials = credential_store::configure(&app_data_dir);
             let resource_dir = app.path().resource_dir().ok();
             let state = tauri::async_runtime::block_on(AppState::initialize(
                 app_data_dir,
@@ -43,6 +45,10 @@ pub fn run() {
             ));
             let (language, check_updates_automatically) =
                 tauri::async_runtime::block_on(desktop::initial_settings(&state));
+            let accounts = tauri::async_runtime::block_on(state.snapshot())
+                .settings
+                .accounts;
+            start_keychain_move(credentials, accounts);
             app.manage(state);
             app.manage(desktop::DesktopState::new(language));
             app.manage(windows::PanelFocusState::default());
@@ -118,4 +124,22 @@ pub fn run() {
             }
             _ => {}
         });
+}
+
+/// Moves Bitbucket and Cloudflare tokens from the keychain to the credentials
+/// file without blocking startup. Credential lookups wait until it finishes, so
+/// the first refresh cannot report a token that is still being moved.
+fn start_keychain_move(
+    store: &'static credential_store::CredentialFile,
+    accounts: Vec<models::Account>,
+) {
+    tauri::async_runtime::spawn(async move {
+        let moved =
+            tokio::task::spawn_blocking(move || legacy_keyring::move_connections(store, &accounts))
+                .await;
+        if moved.is_err() {
+            eprintln!("Moving credentials from the keychain was interrupted.");
+        }
+        credential_store::mark_ready();
+    });
 }

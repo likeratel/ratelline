@@ -117,7 +117,7 @@ export const ja = {
   "accountPicker.addProfile": "プロファイル接続を追加",
   "accountPicker.addAccount": "アカウント接続を追加",
   "accountPicker.loginHelp":
-    "以下の認証方法でアカウントを接続します。トークンはこの端末の安全な認証情報ストアに保存されます。",
+    "以下の認証方法でアカウントを接続します。トークンはこの端末にのみ保存されます。",
   "tray.summary": "実行概要",
   "tray.close": "パネルを閉じる",
   "tray.preview": "プレビュー · サンプルデータ",

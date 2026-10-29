@@ -2,12 +2,8 @@ use serde::{Deserialize, Serialize};
 
 use crate::models::Provider;
 
-#[cfg(not(test))]
-const SERVICE: &str = "com.likeratel.ratelline.cloudflare";
-/// Service name used by releases published before the product was renamed.
-#[cfg(not(test))]
-const LEGACY_SERVICE: &str = "com.likeratel.crowline.cloudflare";
 const MAX_CREDENTIAL_BYTES: usize = 16 * 1024;
+const UNAVAILABLE: &str = "The Cloudflare API token is unavailable. Update the token.";
 
 #[derive(Clone, Deserialize, Eq, PartialEq, Serialize)]
 pub struct CloudflareCredential {
@@ -36,22 +32,24 @@ pub async fn get(provider: Provider, connection_id: &str) -> Result<CloudflareCr
             .map_err(|_| "Test credential storage is unavailable.".to_owned())?
             .get(&account)
             .cloned()
-            .ok_or_else(|| {
-                "The Cloudflare API token is unavailable in secure storage.".to_owned()
-            });
+            .ok_or_else(|| UNAVAILABLE.to_owned());
     }
     #[cfg(not(test))]
-    tokio::task::spawn_blocking(move || {
-        let value = read_entry(&account).ok().flatten().ok_or_else(|| {
-            "The Cloudflare API token is unavailable in secure storage.".to_owned()
-        })?;
-        let credential: CloudflareCredential = serde_json::from_str(&value)
-            .map_err(|_| "The Cloudflare credential in secure storage is invalid.".to_owned())?;
-        validate_credential(&credential)?;
-        Ok(credential)
-    })
-    .await
-    .map_err(|_| "Secure credential lookup was interrupted.".to_owned())?
+    {
+        let store = crate::credential_store::app_store().await?;
+        tokio::task::spawn_blocking(move || {
+            let value = store.get(&account)?.ok_or_else(|| UNAVAILABLE.to_owned())?;
+            if value.len() > MAX_CREDENTIAL_BYTES {
+                return Err("The saved Cloudflare credential is invalid.".into());
+            }
+            let credential: CloudflareCredential = serde_json::from_str(&value)
+                .map_err(|_| "The saved Cloudflare credential is invalid.".to_owned())?;
+            validate_credential(&credential)?;
+            Ok(credential)
+        })
+        .await
+        .map_err(|_| "Credential lookup was interrupted.".to_owned())?
+    }
 }
 
 pub async fn set(
@@ -70,18 +68,21 @@ pub async fn set(
         Ok(())
     }
     #[cfg(not(test))]
-    tokio::task::spawn_blocking(move || {
+    {
         let value = serde_json::to_string(&credential)
             .map_err(|_| "The Cloudflare credential could not be encoded.".to_owned())?;
         if value.len() > MAX_CREDENTIAL_BYTES {
             return Err("The Cloudflare credential is too large.".into());
         }
-        entry(&account)?
-            .set_password(&value)
-            .map_err(|_| "The Cloudflare API token could not be saved securely.".to_owned())
-    })
-    .await
-    .map_err(|_| "Secure credential storage was interrupted.".to_owned())?
+        let store = crate::credential_store::app_store().await?;
+        tokio::task::spawn_blocking(move || {
+            store
+                .set(&account, &value)
+                .map_err(|error| format!("The Cloudflare API token could not be saved. {error}"))
+        })
+        .await
+        .map_err(|_| "Credential storage was interrupted.".to_owned())?
+    }
 }
 
 pub async fn delete(provider: Provider, connection_id: &str) -> Result<(), String> {
@@ -95,9 +96,12 @@ pub async fn delete(provider: Provider, connection_id: &str) -> Result<(), Strin
         Ok(())
     }
     #[cfg(not(test))]
-    tokio::task::spawn_blocking(move || remove_entries(&account))
-        .await
-        .map_err(|_| "Secure credential removal was interrupted.".to_owned())?
+    {
+        let store = crate::credential_store::app_store().await?;
+        tokio::task::spawn_blocking(move || remove_entry(store, &account).map(|_| ()))
+            .await
+            .map_err(|_| "Credential removal was interrupted.".to_owned())?
+    }
 }
 
 pub async fn backup_and_delete(
@@ -117,13 +121,12 @@ pub async fn backup_and_delete(
         Ok(CredentialBackup(value))
     }
     #[cfg(not(test))]
-    tokio::task::spawn_blocking(move || {
-        let value = read_entry(&account)?;
-        remove_entries(&account)?;
-        Ok(CredentialBackup(value))
-    })
-    .await
-    .map_err(|_| "Secure credential removal was interrupted.".to_owned())?
+    {
+        let store = crate::credential_store::app_store().await?;
+        tokio::task::spawn_blocking(move || remove_entry(store, &account).map(CredentialBackup))
+            .await
+            .map_err(|_| "Credential removal was interrupted.".to_owned())?
+    }
 }
 
 pub async fn restore(
@@ -150,13 +153,16 @@ pub async fn restore(
         Ok(())
     }
     #[cfg(not(test))]
-    tokio::task::spawn_blocking(move || {
-        entry(&account)?
-            .set_password(&value)
-            .map_err(|_| "The Cloudflare API token rollback failed.".to_owned())
-    })
-    .await
-    .map_err(|_| "Secure credential rollback was interrupted.".to_owned())?
+    {
+        let store = crate::credential_store::app_store().await?;
+        tokio::task::spawn_blocking(move || {
+            store
+                .set(&account, &value)
+                .map_err(|_| "The Cloudflare API token rollback failed.".to_owned())
+        })
+        .await
+        .map_err(|_| "Credential rollback was interrupted.".to_owned())?
+    }
 }
 
 pub(crate) fn validate_credential(credential: &CloudflareCredential) -> Result<(), String> {
@@ -176,7 +182,11 @@ pub(crate) fn validate_credential(credential: &CloudflareCredential) -> Result<(
     Ok(())
 }
 
-fn credential_account(provider: Provider, connection_id: &str) -> Result<String, String> {
+/// Key of a Cloudflare connection in the credentials file.
+pub(crate) fn credential_account(
+    provider: Provider,
+    connection_id: &str,
+) -> Result<String, String> {
     let prefix = match provider {
         Provider::CloudflarePages => "cloudflare-pages:",
         Provider::CloudflareWorkers => "cloudflare-workers:",
@@ -189,28 +199,17 @@ fn credential_account(provider: Provider, connection_id: &str) -> Result<String,
     Ok(format!("{}:{uuid}", provider.as_str()))
 }
 
+/// Removes the saved entry and its keychain-move record, returning the value.
+/// The keychain is not accessed.
 #[cfg(not(test))]
-fn entry(account: &str) -> Result<keyring::Entry, String> {
-    keyring::Entry::new(SERVICE, account)
-        .map_err(|_| "Secure credential storage is unavailable.".to_owned())
-}
-
-#[cfg(not(test))]
-fn legacy_entry(account: &str) -> Option<keyring::Entry> {
-    keyring::Entry::new(LEGACY_SERVICE, account).ok()
-}
-
-#[cfg(not(test))]
-fn read_entry(account: &str) -> Result<Option<String>, String> {
-    crate::legacy_keyring::read_with_fallback(&entry(account)?, legacy_entry(account).as_ref())
-        .map_err(|_| "The Cloudflare API token is unavailable in secure storage.".to_owned())
-}
-
-#[cfg(not(test))]
-fn remove_entries(account: &str) -> Result<(), String> {
-    crate::legacy_keyring::remove_both(&entry(account)?, legacy_entry(account).as_ref()).map_err(
-        |_| "The Cloudflare API token could not be removed from secure storage.".to_owned(),
-    )
+fn remove_entry(
+    store: &crate::credential_store::CredentialFile,
+    account: &str,
+) -> Result<Option<String>, String> {
+    let value = store
+        .take(account)
+        .map_err(|error| format!("The Cloudflare API token could not be removed. {error}"))?;
+    Ok(value)
 }
 
 #[cfg(test)]

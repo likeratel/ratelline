@@ -115,7 +115,7 @@ export const ko = {
   "accountPicker.addProfile": "프로필 연결 추가",
   "accountPicker.addAccount": "계정 연결 추가",
   "accountPicker.loginHelp":
-    "추가한 계정은 아래 인증 방법으로 연결합니다. 토큰은 이 기기의 보안 저장소에 보관합니다.",
+    "추가한 계정은 아래 인증 방법으로 연결합니다. 토큰은 이 기기에만 보관합니다.",
   "tray.summary": "실행 요약",
   "tray.close": "패널 닫기",
   "tray.preview": "미리보기 · 가상 데이터",

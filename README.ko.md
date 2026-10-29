@@ -80,9 +80,8 @@ Finder나 로그인 시 실행한 앱은 셸의 `PATH`를 상속하지 않습니
 
 ### 삭제
 
-1. 먼저 **설정 → 서비스 연결**에서 Bitbucket과 Cloudflare 연결을 제거합니다. 키체인에서 해당 토큰이 삭제됩니다. CLI 로그인은 각 CLI의 것이므로 건드리지 않습니다.
-2. ratelline을 종료하고 `/Applications/ratelline.app`을 삭제합니다.
-3. 설정도 지우려면 `~/Library/Application Support/io.ratelline.desktop`을 삭제합니다. crowline에서 업그레이드했다면 같은 폴더의 `io.crowline.desktop`도 삭제합니다.
+1. ratelline을 종료하고 `/Applications/ratelline.app`을 삭제합니다.
+2. 설정과 저장된 Bitbucket·Cloudflare 토큰도 지우려면 `~/Library/Application Support/io.ratelline.desktop`을 삭제합니다. crowline에서 업그레이드했다면 같은 폴더의 `io.crowline.desktop`도 삭제합니다. CLI 로그인은 각 CLI의 것이므로 건드리지 않습니다.
 
 ## 빠른 시작
 
@@ -120,11 +119,11 @@ ratelline은 설치된 공식 CLI를 우선 사용하며, AWS SDK 공유 프로�
 | GitLab.com                        | 배포·CI 파이프라인           | self-managed, 실행자 판정 미지원                                                |
 | Bitbucket Cloud                   | 저장소별 Pipelines           | 이메일·API 토큰 인증, 최근 이력·진행 상태 조회, 실행자 구분. Data Center 미지원 |
 | DigitalOcean, Google Cloud, Azure | 배포·Cloud Build/Run·Kudu    | CLI별 범위·출력·페이지 제한                                                     |
-| Cloudflare Pages / Workers        | Pages 배포, Worker 배포·Builds | 계정 ID와 OS 보안 저장소 API 토큰, 직접 읽기 전용 HTTP. Pages·Workers·Builds 권한을 구분 |
+| Cloudflare Pages / Workers        | Pages 배포, Worker 배포·Builds | 계정 ID와 앱 데이터 폴더에 저장한 API 토큰, 직접 읽기 전용 HTTP. Pages·Workers·Builds 권한을 구분 |
 | Firebase                          | Hosting 게시 릴리스, App Hosting 롤아웃 | 설치된 `gcloud`와 선택된 활성 계정, 프로세스에서만 유지하는 단기 액세스 토큰 |
 | EAS / Expo                        | 프로젝트별 Build, 게시된 Update | 설치된 `eas`, 프로젝트 UUID·소유자·slug 입력. 계정 전체 프로젝트 자동 탐색 없음 |
 
-Cloudflare 토큰은 OS 자격 증명 저장소에 보관합니다. Pages에는 **Cloudflare Pages Read**, Worker 배포에는 **Workers Scripts Read**, Builds에는 **Workers CI Read** 권한이 필요합니다. Firebase 연결은 현재 `gcloud` 계정에 고정하고 액세스 토큰·프로젝트 목록에 `--account`를 사용하며 Firebase CLI 로그인은 사용하지 않습니다. EAS는 별도의 읽기 전용 문맥을 만들며 선택한 프로젝트 파일을 읽거나 변경하지 않습니다. 게시된 EAS Update에는 시작 실행자가 없고 실패한 게시 시도도 포함되지 않습니다. Supabase Edge Functions와 fastlane은 계속 CI 안내로 제공하며 신뢰할 수 있는 실행 이력은 GitHub Actions, GitLab CI 또는 fastlane을 실행한 CI에서 확인합니다. [서비스 결정표](docs/authentication.md#provider-decision-matrix)와 [모바일 플랫폼 조사](docs/mobile-provider-notes.md)를 참고하세요.
+Cloudflare 토큰은 앱 데이터 폴더에 저장합니다([업데이트, 데이터, 한계](#업데이트-데이터-한계) 참고). Pages에는 **Cloudflare Pages Read**, Worker 배포에는 **Workers Scripts Read**, Builds에는 **Workers CI Read** 권한이 필요합니다. Firebase 연결은 현재 `gcloud` 계정에 고정하고 액세스 토큰·프로젝트 목록에 `--account`를 사용하며 Firebase CLI 로그인은 사용하지 않습니다. EAS는 별도의 읽기 전용 문맥을 만들며 선택한 프로젝트 파일을 읽거나 변경하지 않습니다. 게시된 EAS Update에는 시작 실행자가 없고 실패한 게시 시도도 포함되지 않습니다. Supabase Edge Functions와 fastlane은 계속 CI 안내로 제공하며 신뢰할 수 있는 실행 이력은 GitHub Actions, GitLab CI 또는 fastlane을 실행한 CI에서 확인합니다. [서비스 결정표](docs/authentication.md#provider-decision-matrix)와 [모바일 플랫폼 조사](docs/mobile-provider-notes.md)를 참고하세요.
 
 이 서비스 경로는 합성 어댑터 fixture와 브라우저 검증을 통과했으며 실계정 검증은 하지 않았습니다. 테스트에는 실제 인증 정보나 서비스 응답을 저장하지 않습니다. 결과와 한계는 [공동 제품 리뷰·검증 기록](docs/product-review-2026-10-06.md)에 정리했습니다.
 
@@ -132,7 +131,7 @@ Cloudflare 토큰은 OS 자격 증명 저장소에 보관합니다. Pages에는 
 
 **설정 → 서비스 연결 → Bitbucket**에서 Atlassian 이메일과 [API 토큰](https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/)을 입력한 뒤 모니터링할 저장소를 선택합니다. 토큰에는 `read:user:bitbucket`, `read:workspace:bitbucket`, `read:repository:bitbucket`, `read:pipeline:bitbucket` 권한이 필요합니다. 별도 CLI 설치는 필요 없습니다. 기본 계정명은 Bitbucket에서 가져오며 연필 버튼으로 별칭을 정할 수 있습니다. **토큰 변경**으로 같은 계정의 인증 정보를 바꾸면 기존 저장소 선택을 유지합니다.
 
-인증 정보는 OS 보안 저장소에만 보관하며 설정 파일·로그·설치 파일에는 넣지 않습니다. Bitbucket 연결을 제거하면 저장된 인증 정보도 삭제됩니다. 메뉴 막대 표시와 프로젝트별 알림은 기존 설정에서 관리합니다. 실행자를 확인할 수 없는 Pipeline은 ‘실행자 미확인’으로 남기며 ‘내 실행’에 포함하지 않습니다. 2026-10-02에 기존 연결의 저장소 3개에서 최근 실행·진행 상태 조회를 확인했습니다. 새 계정 연결 과정은 미검증이며 자동 테스트에는 가상 데이터를 사용합니다.
+인증 정보는 앱 데이터 폴더의 `credentials.json`에 저장하며 설정 파일·로그·설치 파일에는 넣지 않습니다. Bitbucket 연결을 제거하면 저장된 인증 정보도 삭제됩니다. 메뉴 막대 표시와 프로젝트별 알림은 기존 설정에서 관리합니다. 실행자를 확인할 수 없는 Pipeline은 ‘실행자 미확인’으로 남기며 ‘내 실행’에 포함하지 않습니다. 2026-10-02에 기존 연결의 저장소 3개에서 최근 실행·진행 상태 조회를 확인했습니다. 새 계정 연결 과정은 미검증이며 자동 테스트에는 가상 데이터를 사용합니다.
 
 최근 Pipeline은 20개씩 불러옵니다. 진행 상태는 실행·대기·일시정지 상태별로 병렬 조회하며 상태당 최대 50개를 확인합니다. 저장소 탐색은 최대 1,000개 저장소, 저장소 50페이지, 워크스페이스 10페이지로 제한하며 한도 초과나 일부 실패는 화면에 표시합니다.
 
@@ -152,9 +151,9 @@ Cloudflare 토큰은 OS 자격 증명 저장소에 보관합니다. Pages에는 
 
 실행 중인 작업이 있으면 약 30초, 없으면 약 120초마다 조회하며 오류가 나면 간격을 늘립니다. 앱은 모니터링 대상별 조회 상태와 최신성을 표시하며, 서비스가 전달한 실행 갱신 시각은 로컬 조회 시각과 다릅니다. 화면 복귀나 네트워크 복구 시 오래되거나 불완전한 결과는 합쳐진 재조회 요청을 보낼 수 있습니다. 시간 초과, 일부 조회 실패, 서비스별 페이지 제한은 화면에 표시합니다. 늦게 조회된 결과는 알림에서 빠질 수 있으므로 전체 기록은 해당 서비스에서 확인하세요.
 
-설정과 숨긴 실행 기록은 OS 앱 데이터 디렉터리의 `io.ratelline.desktop/settings.json`에 저장합니다. Bitbucket 토큰은 OS 보안 저장소에 보관합니다. GitHub 계정별 토큰은 gh를 통해 해당 조회 프로세스에서만 사용하며 Ratelline이 저장하지 않습니다. 인증 정보나 서비스 실행 파일은 설치 파일에 포함하지 않습니다.
+설정과 숨긴 실행 기록은 OS 앱 데이터 디렉터리의 `io.ratelline.desktop/settings.json`에 저장합니다. Bitbucket·Cloudflare 토큰은 같은 폴더의 `io.ratelline.desktop/credentials.json`(macOS에서는 `~/Library/Application Support/io.ratelline.desktop/credentials.json`)에 저장합니다. 이 파일은 암호화하지 않은 JSON이며 macOS와 Linux에서는 소유자만 읽고 쓸 수 있는 권한(0600)으로 만들고, Windows에서는 사용자 프로필 폴더의 권한에 따릅니다. 같은 사용자 권한으로 실행되는 프로세스는 이 파일을 읽을 수 있고, Time Machine 같은 폴더 백업에도 포함됩니다. 파일이 손상됐거나 더 새로운 버전이 쓴 형식이면 오류로 표시하고 덮어쓰지 않습니다. 복구하거나 삭제한 뒤 토큰을 다시 입력하세요. 이전 버전은 이 토큰을 OS 보안 저장소(macOS 키체인)에 보관했습니다. 앱을 시작하면 저장된 토큰이 없는 Bitbucket·Cloudflare 연결마다 키체인에서 토큰을 한 번 찾아 파일로 옮기고, 파일 저장이 성공한 뒤에만 키체인 항목을 삭제합니다. 옮김·항목 없음·거부 중 어떤 결과든 조회 기록을 파일(`keychainChecked`)에 남기므로 연결마다 키체인은 최대 한 번만 읽고, 이전이 끝나면 키체인 접근 허용 창이 더 뜨지 않습니다. 키체인 항목을 삭제하지 못했거나 파일 저장과 항목 삭제 사이에 앱이 종료되면 항목이 키체인에 남습니다. 실패는 앱의 표준 오류 출력에만 기록되어 평소처럼 앱을 열었을 때는 보이지 않습니다. 필요하면 키체인 접근 앱에서 `com.likeratel.ratelline.*` 또는 `com.likeratel.crowline.*` 항목을 지우세요. 토큰을 읽거나 저장하지 못하면 해당 연결은 토큰을 사용할 수 없다고 표시하며, Bitbucket은 **토큰 변경**, Cloudflare는 **토큰 갱신**으로 다시 입력할 수 있습니다. GitHub 계정별 토큰은 gh를 통해 해당 조회 프로세스에서만 사용하며 Ratelline이 저장하지 않습니다. 인증 정보나 서비스 실행 파일은 설치 파일에 포함하지 않습니다.
 
-**crowline에서 업그레이드:** ratelline의 이전 이름은 crowline입니다. 처음 실행할 때 새 데이터 폴더 `io.ratelline.desktop`이 비어 있으면 `io.crowline.desktop`의 설정과 계정 폴더를 복사합니다. 이전 폴더는 지우지 않으며, 복사 실패는 로그에 남기고 실행을 계속합니다. Bitbucket·Cloudflare 토큰은 처음 사용할 때 이전 보안 저장소 항목(`com.likeratel.crowline.*`)에서 읽어 새 이름(`com.likeratel.ratelline.*`)으로 저장합니다. macOS가 이전 키체인 항목 접근 허용을 한 번 물을 수 있습니다. 연결을 삭제하면 새 항목과 이전 항목을 함께 지웁니다. 자세한 내용은 [릴리스 문서](docs/releases.md#upgrading-from-crowline)를 참고하세요.
+**crowline에서 업그레이드:** ratelline의 이전 이름은 crowline입니다. 처음 실행할 때 새 데이터 폴더 `io.ratelline.desktop`이 비어 있으면 `io.crowline.desktop`의 설정과 계정 폴더를 복사합니다. 이전 폴더는 지우지 않으며, 복사 실패는 로그에 남기고 실행을 계속합니다. Bitbucket·Cloudflare 토큰은 시작할 때 키체인의 `com.likeratel.ratelline.*` 항목, 없으면 이전 `com.likeratel.crowline.*` 항목에서 읽어 `credentials.json`으로 옮기고, 파일 저장 뒤 두 항목을 모두 삭제합니다. macOS가 이전 키체인 항목 접근 허용을 한 번 물을 수 있습니다. 연결을 삭제하면 파일 항목만 지우며 키체인에는 접근하지 않습니다. 자세한 내용은 [릴리스 문서](docs/releases.md#upgrading-from-crowline)를 참고하세요.
 
 설정 파일을 읽거나 변환한 내용을 저장하지 못하면 원본 보존을 위해 설정·계정 변경을 잠그고 복구 안내를 표시합니다. 유효한 백업 파일이나 폴더 권한을 복구한 뒤 앱을 재시작하세요. 읽을 수 있는 설정과 모니터링 결과는 계속 표시합니다.
 

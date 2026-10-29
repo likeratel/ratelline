@@ -80,9 +80,8 @@ Finder やログイン時に開いたアプリはシェルの `PATH` を引き�
 
 ### アンインストール
 
-1. 先に **設定 → サービス接続**で Bitbucket と Cloudflare の接続を削除します。キーチェーンからこれらのトークンが削除されます。CLI のサインインは各 CLI のものであり、変更されません。
-2. ratelline を終了し、`/Applications/ratelline.app` を削除します。
-3. 設定も削除する場合は、`~/Library/Application Support/io.ratelline.desktop` を削除します。crowline からアップグレードした場合は、同じフォルダーの `io.crowline.desktop` も削除します。
+1. ratelline を終了し、`/Applications/ratelline.app` を削除します。
+2. 設定と保存済みの Bitbucket・Cloudflare トークンも削除する場合は、`~/Library/Application Support/io.ratelline.desktop` を削除します。crowline からアップグレードした場合は、同じフォルダーの `io.crowline.desktop` も削除します。CLI のサインインは各 CLI のものであり、変更されません。
 
 ## クイックスタート
 
@@ -120,11 +119,11 @@ GitHub はインストール済みの `gh` CLI を使います。`gh auth login`
 | GitLab.com                        | デプロイ・CI パイプライン       | self-managed と実行者判定は未対応                                                           |
 | Bitbucket Cloud                   | リポジトリの Pipelines          | メールアドレスと API トークン、最近の履歴・実行中の状態・実行者の判定。Data Center は未対応 |
 | DigitalOcean、Google Cloud、Azure | デプロイ・Cloud Build/Run・Kudu | CLI ごとの対象/出力/ページ制限                                                              |
-| Cloudflare Pages / Workers | Pages デプロイ、Worker デプロイ・Builds | アカウント ID と OS 資格情報ストアの API トークン、直接の読み取り専用 HTTP。Pages・Workers・Builds の権限を分離 |
+| Cloudflare Pages / Workers | Pages デプロイ、Worker デプロイ・Builds | アカウント ID とアプリデータフォルダーに保存した API トークン、直接の読み取り専用 HTTP。Pages・Workers・Builds の権限を分離 |
 | Firebase | Hosting の公開済みリリース、App Hosting ロールアウト | インストール済み `gcloud` と選択中の有効アカウント、プロセス内だけの短期アクセストークン |
 | EAS / Expo | プロジェクト単位の Build、公開済み Update | インストール済み `eas`、プロジェクト UUID・owner・slug を入力。アカウント全体の自動検出はなし |
 
-Cloudflare トークンは OS の資格情報ストアに保存します。Pages には **Cloudflare Pages Read**、Worker デプロイには **Workers Scripts Read**、Builds には **Workers CI Read** が必要です。Firebase 接続は現在の `gcloud` アカウントに固定し、アクセストークンとプロジェクト一覧に `--account` を使います。Firebase CLI のログインは使いません。EAS は独自の読み取り専用コンテキストを作成し、選択したプロジェクトのファイルを読んだり変更したりしません。公開済み EAS Update には開始実行者がなく、失敗した公開試行も含まれません。Supabase Edge Functions と fastlane は引き続き CI 案内であり、信頼できる実行履歴は GitHub Actions、GitLab CI、または fastlane を実行した CI で確認します。[プロバイダー決定表](docs/authentication.md#provider-decision-matrix)と[モバイルプロバイダー調査](docs/mobile-provider-notes.md)を参照してください。
+Cloudflare トークンはアプリデータフォルダーに保存します（[アップデート、データ、制限](#アップデートデータ制限)を参照）。Pages には **Cloudflare Pages Read**、Worker デプロイには **Workers Scripts Read**、Builds には **Workers CI Read** が必要です。Firebase 接続は現在の `gcloud` アカウントに固定し、アクセストークンとプロジェクト一覧に `--account` を使います。Firebase CLI のログインは使いません。EAS は独自の読み取り専用コンテキストを作成し、選択したプロジェクトのファイルを読んだり変更したりしません。公開済み EAS Update には開始実行者がなく、失敗した公開試行も含まれません。Supabase Edge Functions と fastlane は引き続き CI 案内であり、信頼できる実行履歴は GitHub Actions、GitLab CI、または fastlane を実行した CI で確認します。[プロバイダー決定表](docs/authentication.md#provider-decision-matrix)と[モバイルプロバイダー調査](docs/mobile-provider-notes.md)を参照してください。
 
 これらのサービス経路は合成アダプター fixture とブラウザー検証に合格しましたが、実アカウントでは検証していません。テストには実際の認証情報やサービス応答を保存しません。結果と限界は[共同製品レビュー・検証記録](docs/product-review-2026-10-06.md)に記載しています。
 
@@ -132,7 +131,7 @@ Cloudflare トークンは OS の資格情報ストアに保存します。Pages
 
 **設定 → サービス接続 → Bitbucket** で Atlassian のメールアドレスと [API トークン](https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/)を入力し、監視するリポジトリを選択します。必要な権限は `read:user:bitbucket`、`read:workspace:bitbucket`、`read:repository:bitbucket`、`read:pipeline:bitbucket` です。CLI のインストールは不要です。アカウント名は Bitbucket から取得し、鉛筆ボタンで表示名を変更できます。**トークンを変更**すると、監視対象を保持したまま同じアカウントの認証情報を更新できます。
 
-認証情報は OS の資格情報ストアに保管し、設定ファイル・ログ・インストーラーには含めません。Bitbucket 接続を削除すると、保存した認証情報も削除されます。メニューバー表示とプロジェクト別通知は既存の設定を使います。実行者を確認できない Pipeline は不明として扱い、自分の実行には含めません。2026-10-02 に接続済みの3リポジトリで最近の実行と進行状況の取得を確認しました。新規アカウントの接続手順は未検証で、自動テストには架空のデータを使用しています。
+認証情報はアプリデータフォルダーの `credentials.json` に保存し、設定ファイル・ログ・インストーラーには含めません。Bitbucket 接続を削除すると、保存した認証情報も削除されます。メニューバー表示とプロジェクト別通知は既存の設定を使います。実行者を確認できない Pipeline は不明として扱い、自分の実行には含めません。2026-10-02 に接続済みの3リポジトリで最近の実行と進行状況の取得を確認しました。新規アカウントの接続手順は未検証で、自動テストには架空のデータを使用しています。
 
 最近の Pipeline は20件ずつ読み込みます。実行中・待機中・一時停止中の状態を並列で照会し、各状態で最大50件を確認します。リポジトリ検出は1,000件、リポジトリ50ページ、ワークスペース10ページが上限です。上限到達や一部の取得失敗は画面に表示します。
 
@@ -152,9 +151,9 @@ Cloudflare トークンは OS の資格情報ストアに保存します。Pages
 
 実行中の処理があるときは約 30 秒、ないときは約 120 秒間隔で取得し、エラー後は間隔を延ばします。アプリは監視対象ごとの照会状態と鮮度を表示し、サービスが返す実行の更新時刻はローカル照会時刻とは別です。画面への復帰またはネットワーク復旧時、古い・不完全な結果はまとめた再照会を要求できます。タイムアウト、部分的な取得失敗、ページ上限は画面に表示します。遅れて取得した結果は通知されない場合があるため、完全な記録は各サービスで確認してください。
 
-設定と非表示実行の記録は OS アプリデータ内の `io.ratelline.desktop/settings.json` に保存します。Bitbucket トークンは OS 資格情報ストアに保存します。gh から取得したユーザー別トークンは該当プロセスでのみ使用し、Ratelline は保存しません。
+設定と非表示実行の記録は OS アプリデータ内の `io.ratelline.desktop/settings.json` に保存します。Bitbucket と Cloudflare のトークンは同じフォルダーの `io.ratelline.desktop/credentials.json`（macOS では `~/Library/Application Support/io.ratelline.desktop/credentials.json`）に保存します。このファイルは暗号化されていない JSON で、macOS と Linux では所有者だけが読み書きできる権限（0600）で作成し、Windows ではユーザープロファイルフォルダーの権限に従います。同じユーザー権限で動くプロセスは読み取ることができ、Time Machine などのフォルダーバックアップにも含まれます。ファイルが破損している場合や新しいバージョンが書いた形式の場合はエラーとして表示し、上書きしません。修復または削除してからトークンを再入力してください。以前のバージョンはこれらのトークンを OS 資格情報ストア（macOS のキーチェーン）に保存していました。起動時、保存済みトークンのない Bitbucket・Cloudflare 接続ごとにキーチェーンからトークンを一度だけ探してファイルへ移し、ファイルへの保存が成功した後にのみキーチェーン項目を削除します。移行・項目なし・拒否のいずれの結果でも検索記録をファイル（`keychainChecked`）に残すため、各接続がキーチェーンを読むのは最大一度で、移行後はアクセス許可を求められなくなります。キーチェーン項目を削除できなかった場合や、ファイル保存と項目削除の間にアプリが終了した場合は、項目がキーチェーンに残ります。失敗はアプリの標準エラー出力にのみ記録され、通常どおりアプリを開いた場合は表示されません。必要であればキーチェーンアクセスで `com.likeratel.ratelline.*` または `com.likeratel.crowline.*` の項目を削除してください。トークンを読み取れない、または保存できない場合、その接続はトークンを利用できないと表示します。Bitbucket は **トークンを変更**、Cloudflare は **トークンを更新** で再入力できます。gh から取得したユーザー別トークンは該当プロセスでのみ使用し、Ratelline は保存しません。
 
-**crowline からのアップグレード:** ratelline の旧名は crowline です。初回起動時に新しいデータフォルダー `io.ratelline.desktop` が空であれば、`io.crowline.desktop` から設定とアカウントフォルダーをコピーします。旧フォルダーは削除せず、コピーの失敗はログに記録して起動を続けます。Bitbucket と Cloudflare のトークンは初回使用時に旧資格情報エントリ（`com.likeratel.crowline.*`）から読み取り、新しい名前（`com.likeratel.ratelline.*`）で保存します。macOS が旧キーチェーン項目へのアクセス許可を一度求めることがあります。接続を削除すると新旧両方のエントリを削除します。詳しくは[リリース文書](docs/releases.md#upgrading-from-crowline)を参照してください。
+**crowline からのアップグレード:** ratelline の旧名は crowline です。初回起動時に新しいデータフォルダー `io.ratelline.desktop` が空であれば、`io.crowline.desktop` から設定とアカウントフォルダーをコピーします。旧フォルダーは削除せず、コピーの失敗はログに記録して起動を続けます。Bitbucket と Cloudflare のトークンは起動時にキーチェーンの `com.likeratel.ratelline.*` エントリ、なければ旧 `com.likeratel.crowline.*` エントリから読み取って `credentials.json` に移し、ファイルへの保存後に両方のエントリを削除します。macOS が旧キーチェーン項目へのアクセス許可を一度求めることがあります。接続を削除するとファイルのエントリだけを削除し、キーチェーンにはアクセスしません。詳しくは[リリース文書](docs/releases.md#upgrading-from-crowline)を参照してください。
 
 設定の読み込みや移行後の保存に失敗した場合は、元のファイルを保護して設定・アカウント変更をロックし、復旧案内を表示します。有効なバックアップまたはフォルダーの権限を復元してから、アプリを再起動してください。読み込めた設定と監視結果は引き続き表示します。
 

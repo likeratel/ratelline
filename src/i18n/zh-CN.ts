@@ -111,7 +111,7 @@ export const zhCN = {
   "accountPicker.addProfile": "添加配置文件连接",
   "accountPicker.addAccount": "添加账户连接",
   "accountPicker.loginHelp":
-    "请使用以下认证选项连接账户。令牌保存在此设备的安全凭据存储中。",
+    "请使用以下认证选项连接账户。令牌仅保存在此设备上。",
   "tray.summary": "运行摘要",
   "tray.close": "关闭面板",
   "tray.preview": "预览 · 示例数据",

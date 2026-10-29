@@ -7,7 +7,7 @@ const en = {
   connecting: "Connecting…",
   renew: "Renew token",
   tokenHelp:
-    "Stored in your operating system's credential vault. Require Cloudflare Pages Read for Pages, Workers Scripts Read for Workers, and Workers CI Read for Builds. Runs without an identified actor appear in All runs.",
+    "Saved in this app's data folder on this device. Require Cloudflare Pages Read for Pages, Workers Scripts Read for Workers, and Workers CI Read for Builds. Runs without an identified actor appear in All runs.",
   pagesSummary: "Read deployment history from the Cloudflare Pages API.",
   workersSummary:
     "Read Worker deployment records. Cloudflare Builds are a separate target type.",
@@ -41,7 +41,7 @@ const ko: Record<keyof typeof en, string> = {
   connecting: "연결 중…",
   renew: "토큰 갱신",
   tokenHelp:
-    "토큰은 운영체제의 자격 증명 저장소에 보관합니다. Pages에는 Cloudflare Pages Read, Workers에는 Workers Scripts Read, Builds 조회에는 Workers CI Read 권한이 필요합니다. 실행자를 확인할 수 없는 항목은 전체 실행에서 볼 수 있습니다.",
+    "토큰은 이 기기의 앱 데이터 폴더에 저장합니다. Pages에는 Cloudflare Pages Read, Workers에는 Workers Scripts Read, Builds 조회에는 Workers CI Read 권한이 필요합니다. 실행자를 확인할 수 없는 항목은 전체 실행에서 볼 수 있습니다.",
   pagesSummary: "Cloudflare Pages API에서 배포 이력을 조회합니다.",
   workersSummary:
     "Worker 배포 기록을 조회합니다. Cloudflare Builds는 별도의 대상 유형입니다.",
@@ -75,7 +75,7 @@ const ja: Record<keyof typeof en, string> = {
   connecting: "接続中…",
   renew: "トークンを更新",
   tokenHelp:
-    "トークンは OS の認証情報ストアに保存されます。Pages には Cloudflare Pages Read、Workers には Workers Scripts Read、Builds の取得には Workers CI Read 権限が必要です。実行者を確認できない項目はすべての実行で確認できます。",
+    "トークンはこの端末のアプリデータフォルダーに保存されます。Pages には Cloudflare Pages Read、Workers には Workers Scripts Read、Builds の取得には Workers CI Read 権限が必要です。実行者を確認できない項目はすべての実行で確認できます。",
   pagesSummary: "Cloudflare Pages API からデプロイ履歴を取得します。",
   workersSummary:
     "Worker のデプロイ記録を取得します。Cloudflare Builds は別の対象種別です。",
@@ -109,7 +109,7 @@ const zhCN: Record<keyof typeof en, string> = {
   connecting: "正在连接…",
   renew: "更新令牌",
   tokenHelp:
-    "令牌保存在操作系统的凭据存储中。Pages 需要 Cloudflare Pages Read，Workers 需要 Workers Scripts Read，查询 Builds 需要 Workers CI Read 权限。无法识别执行者的项目可在全部运行中查看。",
+    "令牌保存在此设备的应用数据文件夹中。Pages 需要 Cloudflare Pages Read，Workers 需要 Workers Scripts Read，查询 Builds 需要 Workers CI Read 权限。无法识别执行者的项目可在全部运行中查看。",
   pagesSummary: "从 Cloudflare Pages API 读取部署历史。",
   workersSummary: "读取 Worker 部署记录。Cloudflare Builds 是单独的目标类型。",
   firebaseSummary:

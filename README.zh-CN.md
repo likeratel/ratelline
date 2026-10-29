@@ -80,9 +80,8 @@ ratelline 是在菜单栏和系统托盘中无畏巡视部署线的监视者。�
 
 ### 卸载
 
-1. 先在 **设置 → 服务连接** 中移除 Bitbucket 和 Cloudflare 连接；这会从钥匙串中删除它们的令牌。CLI 登录属于各个 CLI，不会受影响。
-2. 退出 ratelline，删除 `/Applications/ratelline.app`。
-3. 如需同时删除设置，请删除 `~/Library/Application Support/io.ratelline.desktop`；如果是从 crowline 升级的，也请删除同一文件夹中的 `io.crowline.desktop`。
+1. 退出 ratelline，删除 `/Applications/ratelline.app`。
+2. 如需同时删除设置和已保存的 Bitbucket、Cloudflare 令牌，请删除 `~/Library/Application Support/io.ratelline.desktop`；如果是从 crowline 升级的，也请删除同一文件夹中的 `io.crowline.desktop`。CLI 登录属于各个 CLI，不会受影响。
 
 ## 快速开始
 
@@ -120,11 +119,11 @@ GitHub 使用已安装的 `gh` CLI。运行 `gh auth login` 后，为每个连�
 | GitLab.com                        | 部署与 CI 管道               | 不支持 self-managed 和执行者判定                                    |
 | Bitbucket Cloud                   | 仓库 Pipelines               | 邮箱和 API 令牌、最近记录与运行状态、执行者识别。不支持 Data Center |
 | DigitalOcean、Google Cloud、Azure | 部署、Cloud Build/Run、Kudu  | 各 CLI 的范围/输出/分页限制                                         |
-| Cloudflare Pages / Workers | Pages 部署、Worker 部署和 Builds | 账户 ID 与 OS 凭据存储中的 API 令牌，直接只读 HTTP；Pages、Workers、Builds 使用独立权限 |
+| Cloudflare Pages / Workers | Pages 部署、Worker 部署和 Builds | 账户 ID 与保存在应用数据文件夹中的 API 令牌，直接只读 HTTP；Pages、Workers、Builds 使用独立权限 |
 | Firebase | Hosting 已发布版本、App Hosting rollout | 已安装的 `gcloud` 与选定的有效账户，仅在进程中保留的短期访问令牌 |
 | EAS / Expo | 项目范围的 Build、已发布的 Update | 已安装的 `eas`，输入项目 UUID、owner 和 slug；不自动发现账户中的全部项目 |
 
-Cloudflare 令牌保存在 OS 凭据存储中。Pages 需要 **Cloudflare Pages Read**，Worker 部署需要 **Workers Scripts Read**，Builds 需要 **Workers CI Read**。Firebase 连接固定到当前 `gcloud` 账户，并为访问令牌和项目列表使用 `--account`；不使用 Firebase CLI 登录。EAS 会创建自己的只读上下文，不会读取或更改所选项目文件。已发布的 EAS Update 没有发起执行者，也不包含失败的发布尝试。Supabase Edge Functions 和 fastlane 仍为 CI 指引；可靠的运行历史请在 GitHub Actions、GitLab CI 或执行 fastlane 的 CI 中查看。参见[服务决策表](docs/authentication.md#provider-decision-matrix)和[移动端服务商调研](docs/mobile-provider-notes.md)。
+Cloudflare 令牌保存在应用数据文件夹中（参见[更新、数据和限制](#更新数据和限制)）。Pages 需要 **Cloudflare Pages Read**，Worker 部署需要 **Workers Scripts Read**，Builds 需要 **Workers CI Read**。Firebase 连接固定到当前 `gcloud` 账户，并为访问令牌和项目列表使用 `--account`；不使用 Firebase CLI 登录。EAS 会创建自己的只读上下文，不会读取或更改所选项目文件。已发布的 EAS Update 没有发起执行者，也不包含失败的发布尝试。Supabase Edge Functions 和 fastlane 仍为 CI 指引；可靠的运行历史请在 GitHub Actions、GitLab CI 或执行 fastlane 的 CI 中查看。参见[服务决策表](docs/authentication.md#provider-decision-matrix)和[移动端服务商调研](docs/mobile-provider-notes.md)。
 
 这些服务路径已通过合成适配器 fixture 和浏览器验证，但尚未通过真实账户验证。测试不会保存真实凭据或服务响应。结果和限制见[联合产品审查与验证记录](docs/product-review-2026-10-06.md)。
 
@@ -132,7 +131,7 @@ Cloudflare 令牌保存在 OS 凭据存储中。Pages 需要 **Cloudflare Pages 
 
 在 **设置 → 服务连接 → Bitbucket** 中输入 Atlassian 邮箱和 [API 令牌](https://support.atlassian.com/bitbucket-cloud/docs/create-an-api-token/)，再选择要监控的仓库。令牌需要 `read:user:bitbucket`、`read:workspace:bitbucket`、`read:repository:bitbucket` 和 `read:pipeline:bitbucket` 权限，无需安装 CLI。默认账号名称来自 Bitbucket，也可点击铅笔设置别名。通过 **更换令牌** 更新同一账号的凭据时，会保留已选仓库。
 
-凭据仅保存在系统凭据存储中，不会写入设置文件、日志或安装包。删除 Bitbucket 连接时，也会删除对应凭据。菜单栏显示和项目通知沿用现有设置。无法确认执行者的 Pipeline 会标为未知，不计入“我的执行”。已于 2026-10-02 验证现有连接下 3 个仓库的最近执行及进行中状态查询。新账号连接流程仍未验证，自动测试使用虚构数据。
+凭据保存在应用数据文件夹的 `credentials.json` 中，不会写入设置文件、日志或安装包。删除 Bitbucket 连接时，也会删除对应凭据。菜单栏显示和项目通知沿用现有设置。无法确认执行者的 Pipeline 会标为未知，不计入“我的执行”。已于 2026-10-02 验证现有连接下 3 个仓库的最近执行及进行中状态查询。新账号连接流程仍未验证，自动测试使用虚构数据。
 
 最近的 Pipeline 每页读取20条。运行、等待及暂停等状态并行查询，每种状态最多50条。仓库发现最多查询1,000个仓库、50页仓库列表和10页工作区列表；达到上限或部分查询失败时会在界面提示。
 
@@ -152,9 +151,9 @@ Cloudflare 令牌保存在 OS 凭据存储中。Pages 需要 **Cloudflare Pages 
 
 存在运行中的任务时约每 30 秒查询一次，空闲时约每 120 秒一次，出错后会延长间隔。应用按监控目标显示查询状态和新鲜度；服务提供的执行更新时间与本地查询时间不同。回到前台或网络恢复时，过期或不完整的结果可以请求一次合并后的重新查询。超时、部分查询失败和分页上限会在界面中显示。延迟获取的结果可能不触发通知，完整记录请查看服务本身。
 
-设置与隐藏执行记录保存在系统应用数据目录的 `io.ratelline.desktop/settings.json` 中。Bitbucket 令牌保存在系统凭据存储中。通过 gh 获取的用户令牌仅用于对应子进程，Ratelline 不保存令牌。
+设置与隐藏执行记录保存在系统应用数据目录的 `io.ratelline.desktop/settings.json` 中。Bitbucket 和 Cloudflare 令牌保存在同一文件夹的 `io.ratelline.desktop/credentials.json`（macOS 上为 `~/Library/Application Support/io.ratelline.desktop/credentials.json`）。该文件是未加密的 JSON，在 macOS 和 Linux 上以仅所有者可读写的权限（0600）创建，在 Windows 上则依赖用户配置文件夹的权限。以同一用户身份运行的进程可以读取它，Time Machine 等文件夹备份也会包含它。文件损坏或由更新版本写入时会显示错误且不会被覆盖；请修复或删除后重新输入令牌。早期版本将这些令牌保存在系统凭据存储（macOS 钥匙串）中。启动时，对每个尚未保存令牌的 Bitbucket 或 Cloudflare 连接，应用会从钥匙串读取一次令牌并移入该文件，并且仅在文件保存成功后才删除钥匙串项目。无论结果是已迁移、没有条目还是被拒绝，都会在文件中（`keychainChecked`）记录这次查询，因此每个连接最多读取一次钥匙串，迁移完成后不会再弹出钥匙串访问请求。如果钥匙串项目无法删除，或应用在保存文件与删除项目之间退出，该项目会留在钥匙串中。失败只写入应用的标准错误输出，正常打开应用时看不到；如有需要，可在“钥匙串访问”中删除 `com.likeratel.ratelline.*` 或 `com.likeratel.crowline.*` 项目。如果无法读取或保存令牌，该连接会显示令牌不可用；Bitbucket 可通过 **更换令牌**、Cloudflare 可通过 **更新令牌** 重新输入。通过 gh 获取的用户令牌仅用于对应子进程，Ratelline 不保存令牌。
 
-**从 crowline 升级：** ratelline 的旧名称是 crowline。首次启动时，如果新的数据目录 `io.ratelline.desktop` 为空，应用会从 `io.crowline.desktop` 复制设置和账号文件夹；旧目录不会被删除，复制失败会记录日志并继续启动。Bitbucket 和 Cloudflare 令牌会在首次使用时从旧凭据条目（`com.likeratel.crowline.*`）读取，并以新名称（`com.likeratel.ratelline.*`）保存。macOS 可能会询问一次是否允许读取旧钥匙串项目。删除连接时会同时删除新旧条目。详见[发布说明](docs/releases.md#upgrading-from-crowline)。
+**从 crowline 升级：** ratelline 的旧名称是 crowline。首次启动时，如果新的数据目录 `io.ratelline.desktop` 为空，应用会从 `io.crowline.desktop` 复制设置和账号文件夹；旧目录不会被删除，复制失败会记录日志并继续启动。Bitbucket 和 Cloudflare 令牌会在启动时从钥匙串的 `com.likeratel.ratelline.*` 条目读取（不存在时读取旧的 `com.likeratel.crowline.*` 条目）并移入 `credentials.json`，文件保存后删除这两个条目。macOS 可能会询问一次是否允许读取旧钥匙串项目。删除连接时只会删除文件中的条目，不会访问钥匙串。详见[发布说明](docs/releases.md#upgrading-from-crowline)。
 
 如果无法读取设置或保存迁移后的设置，应用会保留原始文件，锁定设置及账户更改，并显示恢复提示。请恢复有效备份或文件夹权限后重启应用。已读取的设置和监控结果仍可查看。
 

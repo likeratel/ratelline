@@ -118,7 +118,7 @@ export const en = {
   "accountPicker.addProfile": "Add profile connection",
   "accountPicker.addAccount": "Add account connection",
   "accountPicker.loginHelp":
-    "Connect this account using the authentication options below. Tokens stay in this device’s secure credential store.",
+    "Connect this account using the authentication options below. Tokens stay on this device.",
   "tray.summary": "Run summary",
   "tray.close": "Close panel",
   "tray.preview": "Preview · Sample data",

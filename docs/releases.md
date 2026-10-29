@@ -53,11 +53,21 @@ names. Upgrades keep existing data as follows:
   sibling `io.crowline.desktop` folder exists, its files (`settings.json`, per-account CLI folders) are
   copied. Symbolic links are skipped. The old folder is never modified or deleted. Per-file failures
   are written to stderr and startup continues; a partially copied folder is not retried.
-- **Credentials.** Bitbucket and Cloudflare tokens move from `com.likeratel.crowline.bitbucket` and
-  `com.likeratel.crowline.cloudflare` to `com.likeratel.ratelline.*`. When the new entry is missing, the
-  app reads the old entry once and saves it under the new name. The old entry remains until the
-  connection is removed, which deletes both entries. macOS may ask once whether ratelline may read
-  the Keychain item created by crowline; denying it makes that connection ask for its token again.
+- **Credentials.** Bitbucket and Cloudflare tokens are now saved in `credentials.json` in the app data
+  folder instead of the OS credential store. On startup, each Bitbucket or Cloudflare connection without
+  a file entry or a recorded earlier lookup is looked up in the Keychain under `com.likeratel.ratelline.*`, then under the former
+  `com.likeratel.crowline.bitbucket` and `com.likeratel.crowline.cloudflare` names. A value found there
+  is written to the file, and both Keychain entries are deleted only after that write succeeds.
+  Every lookup, whether it moved a token, found nothing, or was denied, is recorded in the file's
+  `keychainChecked` list, so each connection reads the Keychain at most once; connections that already
+  have a file entry never touch it. Credential lookups wait until this step finishes. macOS may ask once
+  whether ratelline may read a Keychain item; if access is denied, the item stays in place and the
+  connection reports its token as unavailable until the token is entered again. If the token or the
+  lookup record cannot be written to the file, the lookup is retried on the next start. Keychain items
+  that cannot be deleted stay in the Keychain; removing a connection no longer accesses the Keychain.
+  Failures are written to stderr without token values, which is not visible when the app is opened
+  from Finder. If the app quits after saving the file but before deleting the Keychain items, those
+  items also stay; the next start sees the file entry and does not touch the Keychain again.
 - **Not migrated.** Login-item (autostart) registration and macOS notification permission are tied to
   the app identity, so re-enable them in General settings and re-allow notifications. The macOS menu-bar
   position of the tray icon resets.

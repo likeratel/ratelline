@@ -1,11 +1,6 @@
 use serde::{Deserialize, Serialize};
 
 #[cfg(not(test))]
-const SERVICE: &str = "com.likeratel.ratelline.bitbucket";
-/// Service name used by releases published before the product was renamed.
-#[cfg(not(test))]
-const LEGACY_SERVICE: &str = "com.likeratel.crowline.bitbucket";
-#[cfg(not(test))]
 const MAX_CREDENTIAL_BYTES: usize = 16 * 1024;
 
 #[derive(Clone, Deserialize, Eq, PartialEq, Serialize)]
@@ -40,25 +35,22 @@ pub async fn get_bitbucket(connection_id: &str) -> Result<BitbucketCredential, S
             .map_err(|_| "Test credential storage is unavailable.".to_owned())?
             .get(connection_id)
             .cloned()
-            .ok_or_else(|| {
-                "The Bitbucket credential is unavailable in secure storage.".to_owned()
-            });
+            .ok_or_else(|| UNAVAILABLE.to_owned());
     }
     #[cfg(not(test))]
     {
+        let store = crate::credential_store::app_store().await?;
         let account = connection_id.to_owned();
         tokio::task::spawn_blocking(move || {
-            let value = read_entry(&account).ok().flatten().ok_or_else(|| {
-                "The Bitbucket credential is unavailable in secure storage.".to_owned()
-            })?;
+            let value = store.get(&account)?.ok_or_else(|| UNAVAILABLE.to_owned())?;
             if value.len() > MAX_CREDENTIAL_BYTES {
-                return Err("The Bitbucket credential in secure storage is invalid.".into());
+                return Err("The saved Bitbucket credential is invalid.".into());
             }
             serde_json::from_str(&value)
-                .map_err(|_| "The Bitbucket credential in secure storage is invalid.".to_owned())
+                .map_err(|_| "The saved Bitbucket credential is invalid.".to_owned())
         })
         .await
-        .map_err(|_| "Secure credential lookup was interrupted.".to_owned())?
+        .map_err(|_| "Credential lookup was interrupted.".to_owned())?
     }
 }
 
@@ -83,13 +75,14 @@ pub async fn set_bitbucket(
         if value.len() > MAX_CREDENTIAL_BYTES {
             return Err("The Bitbucket credential is too large.".into());
         }
+        let store = crate::credential_store::app_store().await?;
         tokio::task::spawn_blocking(move || {
-            entry(&account)?
-                .set_password(&value)
-                .map_err(|_| "The Bitbucket credential could not be saved securely.".to_owned())
+            store
+                .set(&account, &value)
+                .map_err(|error| format!("The Bitbucket credential could not be saved. {error}"))
         })
         .await
-        .map_err(|_| "Secure credential storage was interrupted.".to_owned())?
+        .map_err(|_| "Credential storage was interrupted.".to_owned())?
     }
 }
 
@@ -105,14 +98,11 @@ pub async fn delete_bitbucket(connection_id: &str) -> Result<(), String> {
     }
     #[cfg(not(test))]
     {
+        let store = crate::credential_store::app_store().await?;
         let account = connection_id.to_owned();
-        tokio::task::spawn_blocking(move || {
-            remove_entries(&account).map_err(|_| {
-                "The Bitbucket credential could not be removed from secure storage.".to_owned()
-            })
-        })
-        .await
-        .map_err(|_| "Secure credential removal was interrupted.".to_owned())?
+        tokio::task::spawn_blocking(move || remove_entry(store, &account).map(|_| ()))
+            .await
+            .map_err(|_| "Credential removal was interrupted.".to_owned())?
     }
 }
 
@@ -133,18 +123,11 @@ pub async fn backup_and_delete_bitbucket(connection_id: &str) -> Result<Credenti
     }
     #[cfg(not(test))]
     {
+        let store = crate::credential_store::app_store().await?;
         let account = connection_id.to_owned();
-        tokio::task::spawn_blocking(move || {
-            let value = read_entry(&account).map_err(|_| {
-                "The Bitbucket credential is unavailable in secure storage.".to_owned()
-            })?;
-            remove_entries(&account).map_err(|_| {
-                "The Bitbucket credential could not be removed from secure storage.".to_owned()
-            })?;
-            Ok(CredentialBackup(value))
-        })
-        .await
-        .map_err(|_| "Secure credential removal was interrupted.".to_owned())?
+        tokio::task::spawn_blocking(move || remove_entry(store, &account).map(CredentialBackup))
+            .await
+            .map_err(|_| "Credential removal was interrupted.".to_owned())?
     }
 }
 
@@ -168,39 +151,31 @@ pub async fn restore_bitbucket(
     }
     #[cfg(not(test))]
     {
+        let store = crate::credential_store::app_store().await?;
         let account = connection_id.to_owned();
         tokio::task::spawn_blocking(move || {
-            entry(&account)?
-                .set_password(&value)
+            store
+                .set(&account, &value)
                 .map_err(|_| "The Bitbucket credential rollback failed.".to_owned())
         })
         .await
-        .map_err(|_| "Secure credential rollback was interrupted.".to_owned())?
+        .map_err(|_| "Credential rollback was interrupted.".to_owned())?
     }
 }
 
-#[cfg(not(test))]
-fn entry(account: &str) -> Result<keyring::Entry, String> {
-    keyring::Entry::new(SERVICE, account)
-        .map_err(|_| "Secure credential storage is unavailable.".to_owned())
-}
+const UNAVAILABLE: &str = "The Bitbucket credential is unavailable. Update the token.";
 
+/// Removes the saved entry and its keychain-move record, returning the value.
+/// The keychain is not accessed.
 #[cfg(not(test))]
-fn legacy_entry(account: &str) -> Option<keyring::Entry> {
-    keyring::Entry::new(LEGACY_SERVICE, account).ok()
-}
-
-#[cfg(not(test))]
-fn read_entry(account: &str) -> Result<Option<String>, String> {
-    crate::legacy_keyring::read_with_fallback(&entry(account)?, legacy_entry(account).as_ref())
-        .map_err(|_| "The Bitbucket credential is unavailable in secure storage.".to_owned())
-}
-
-#[cfg(not(test))]
-fn remove_entries(account: &str) -> Result<(), String> {
-    crate::legacy_keyring::remove_both(&entry(account)?, legacy_entry(account).as_ref()).map_err(
-        |_| "The Bitbucket credential could not be removed from secure storage.".to_owned(),
-    )
+fn remove_entry(
+    store: &crate::credential_store::CredentialFile,
+    account: &str,
+) -> Result<Option<String>, String> {
+    let value = store
+        .take(account)
+        .map_err(|error| format!("The Bitbucket credential could not be removed. {error}"))?;
+    Ok(value)
 }
 
 #[cfg(test)]
@@ -219,6 +194,11 @@ pub fn test_contains_token(token: &str) -> bool {
         .expect("test credential store")
         .values()
         .any(|credential| credential.token == token)
+}
+
+/// Key of a Bitbucket connection in the credentials file.
+pub(crate) fn storage_key(connection_id: &str) -> Result<String, String> {
+    validate_connection_id(connection_id).map(|()| connection_id.to_owned())
 }
 
 fn validate_connection_id(value: &str) -> Result<(), String> {
