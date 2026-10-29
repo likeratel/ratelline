@@ -51,6 +51,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
     };
     match identity(cli).await {
         Ok(identity) => Connection {
+            kind: None,
             connection_id: account.id.clone(),
             provider: Provider::Eas,
             status: ConnectionStatus::Connected,
@@ -357,6 +358,7 @@ async fn before_deadline<T>(
 
 fn issue(target: &Target, message: &str) -> Issue {
     Issue {
+        kind: crate::models::IssueKind::Other,
         provider: Provider::Eas,
         connection_id: Some(target.connection_id.clone()),
         target_id: Some(target.id.clone()),

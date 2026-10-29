@@ -4,15 +4,33 @@ ratelline runs on the user's computer without a ratelline-operated server. It pr
 
 ## GitHub accounts
 
-Install [GitHub CLI](https://cli.github.com/) and run `gh auth login` in a terminal. In **Settings → Connections**, select a GitHub connection, choose a signed-in CLI username, and connect it. Additional connections may select different CLI users; GitHub Actions and GitHub Deployments use the same available user list.
+Install [GitHub CLI](https://cli.github.com/) and run `gh auth login --hostname github.com --web` in a terminal. In **Settings → Connections**, choose GitHub; the **GitHub account** list appears immediately with each signed-in account's state (signed in, sign-in needed, check failed) and whether it can read every repository selected for the connection. Press **Use this account**, then pick projects. Additional connections may select different CLI users; GitHub Actions and GitHub Deployments use the same available user list. gh versions without `gh auth status --json` are read from the plain `gh auth status` report.
 
-The default local connection can use the CLI's current session. Explicit account selections use [`gh auth token --hostname github.com --user USER`](https://cli.github.com/manual/gh_auth_token) and pass the result only to the matching `gh api` subprocess. Ratelline does not run `gh auth switch`, persist extracted GitHub tokens, return them to the webview, or distribute a patched GitHub CLI. Adding a new login in the terminal is an explicit user action. No Ratelline OAuth app or client ID is required.
+Every GitHub connection, including the built-in `github:local`, is pinned to one gh account and never follows gh's active account, so `gh auth switch` in a terminal does not change what ratelline reads. A connection without a selected account reports **No CLI account is selected** instead of reading through the active account. When the app starts and on each refresh, such a connection is pinned automatically only when exactly one signed-in account can read all of its repositories (or, with no repositories, return `GET /user`), every check finished, and no other connection of the same service already uses that account; otherwise it waits for your choice. If the only matching account is already used by another connection, the account list marks it **Used by another connection**; choose a different account or remove the other connection.
 
-A connection is bound to the verified provider identity. Existing API-era connections keep their IDs, selected projects, aliases, and notification rules; select the matching CLI account to reconnect. An unbound extra connection does not silently inherit the CLI's current user.
+Account selections use [`gh auth token --hostname github.com --user USER`](https://cli.github.com/manual/gh_auth_token) and pass the result only to the matching `gh api` subprocess. Ratelline does not run `gh auth switch`, persist extracted GitHub tokens, return them to the webview, or distribute a patched GitHub CLI. Adding a new login in the terminal is an explicit user action. No Ratelline OAuth app or client ID is required.
+
+A connection is bound to the verified provider identity. Existing API-era connections keep their IDs, selected projects, aliases, and notification rules; select the matching CLI account to reconnect. No unbound connection silently inherits the CLI's current user.
+
+### When a connection fails
+
+**Settings → Connections** lists failing connections first under **Needs fixing**, each with its cause, the number of affected targets and one action:
+
+| Cause | Action |
+| --- | --- |
+| No account selected, or the selected GitHub account cannot read a repository (HTTP 403/404) | **Switch to an account with access** checks every signed-in account. One match is used immediately, several are offered as a short choice, and none leads to the sign-in command. |
+| Signed out (GitHub) | Shows `gh auth login --hostname github.com --web` with a copy button and **Check again**. ratelline never runs gh's login or switch commands. |
+| CLI missing or unsupported version | Installation help and **Check again**. |
+| Network, rate limit, timeout | **Try again** starts a new query. |
+| Vercel or AWS signed out | **Sign in with browser** runs the existing in-app sign-in. Vercel access denied asks you to sign in with an account that has access. |
+
+The same cause reported by several queries for one target is shown once, and service health groups causes per connection. A connection stays bound to the GitHub user it first verified. Automatic binding never changes that user. When you choose an account of a different GitHub user yourself, in the fix card or the account list, ratelline first asks you to confirm that the connection's My runs and notifications will follow the new user; after you confirm, the connection keeps its ID and selected projects, its cached runs are discarded and queried again with the new user. An account already used by another connection still cannot be chosen. Repository access of an account belonging to a different GitHub user is checked only when you open the diagnosis (the fix card or the account list), never during automatic binding.
 
 ## Vercel accounts
 
 Install [Vercel CLI](https://vercel.com/docs/cli) and sign in with `vercel login` for the default local connection. Additional accounts use the same installed executable with a private, per-connection [`--global-config`](https://vercel.com/docs/cli/global-options) directory. Use the app's browser sign-in action to authenticate that connection. This keeps additional accounts separate from the terminal's default Vercel session.
+
+The default `vercel:local` connection follows the terminal's current Vercel login. Once its identity is saved, a different login is reported as an account mismatch instead of being read.
 
 Ratelline reads through [`vercel api`](https://vercel.com/changelog/introducing-the-vercel-api-cli-command), explicitly selecting the personal or team scope. Unsupported commands or CLI output report an actionable compatibility error rather than an empty successful result. Previous API connections may need to sign in again with the same account. Ratelline no longer asks for a Vercel API token or its own OAuth registration.
 

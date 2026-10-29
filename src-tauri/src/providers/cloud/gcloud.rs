@@ -209,6 +209,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
                 .find(|candidate| candidate.status.eq_ignore_ascii_case("ACTIVE"));
             match active {
                 Some(active) if !active.account.trim().is_empty() => Connection {
+                    kind: None,
                     connection_id: account.id.clone(),
                     provider: PROVIDER,
                     status: ConnectionStatus::Connected,

@@ -137,9 +137,9 @@ test("clears CLI account selection per connection and preserves other targets on
   await page.goto("/?view=dashboard");
   await page.getByRole("button", { name: "설정", exact: true }).click();
   const connections = page.getByRole("tabpanel", { name: "서비스 연결" });
-  await connections.locator(".authentication-details > summary").click();
-  const tokenInput = connections.getByLabel("GitHub CLI 계정", { exact: true });
-  await tokenInput.selectOption("orbit-developer");
+  await expect(
+    connections.getByRole("button", { name: "계정 바꾸기 · orbit-developer" }),
+  ).toBeVisible();
   await connections
     .getByRole("button", { name: "계정 추가", exact: true })
     .click();
@@ -149,15 +149,24 @@ test("clears CLI account selection per connection and preserves other targets on
   await connections
     .getByRole("button", { name: "계정 연결 추가", exact: true })
     .click();
-  await expect(tokenInput).toHaveValue("");
+  const accounts = connections.getByRole("region", { name: "GitHub 계정" });
+  await expect(
+    accounts.getByText("아직 계정을 고르지 않았습니다.", { exact: false }),
+  ).toBeVisible();
+  await expect(accounts.getByText("다른 연결에서 사용 중")).toBeVisible();
+  await expect(
+    accounts.getByRole("button", { name: "orbit-developer 사용" }),
+  ).toBeDisabled();
   await connections.getByRole("button", { name: "연결 및 대상 확인" }).click();
   await connections.locator(".target-option input").check();
-  await connections
-    .locator(".authentication-details:not([open]) > summary")
-    .click();
-  await tokenInput.selectOption("orbit-work");
+  await accounts.getByRole("button", { name: "orbit-work 사용" }).click();
+  await expect(
+    connections.getByRole("button", { name: "계정 바꾸기 · orbit-work" }),
+  ).toBeVisible();
   await connections.getByLabel("연결할 계정").selectOption("github:local");
-  await expect(tokenInput).toHaveValue("");
+  await expect(
+    connections.getByRole("button", { name: "계정 바꾸기 · orbit-developer" }),
+  ).toBeVisible();
   await expect(connections.locator(".target-option input")).toBeChecked();
   await connections.getByLabel("연결할 계정").selectOption({ label: "회사" });
   await connections.getByRole("button", { name: "이 계정 연결 제거" }).click();

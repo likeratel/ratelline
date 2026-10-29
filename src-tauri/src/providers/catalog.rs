@@ -1,7 +1,9 @@
 use super::{aws, bitbucket, cloud, github, github_deployments, hosting, mobile, vercel};
 use crate::{
     cli::CliInvocation,
-    models::{Account, ActivityPage, Connection, Discovery, Provider, Target},
+    models::{
+        Account, ActivityPage, Connection, Discovery, IssueKind, Provider, QueryError, Target,
+    },
 };
 
 pub fn local_tools() -> &'static [(Provider, &'static [&'static str])] {
@@ -41,6 +43,14 @@ pub async fn connection(
     account: &Account,
     target: Option<&Target>,
 ) -> Connection {
+    provider_connection(cli, account, target).await.normalized()
+}
+
+async fn provider_connection(
+    cli: Option<&CliInvocation>,
+    account: &Account,
+    target: Option<&Target>,
+) -> Connection {
     match account.provider {
         Provider::Github => github::connection(cli, &account.id).await,
         Provider::GithubDeployments => {
@@ -76,6 +86,14 @@ pub async fn connection(
 }
 
 pub async fn discover(cli: Option<&CliInvocation>, account: &Account) -> Discovery {
+    let found = provider_discovery(cli, account).await;
+    Discovery {
+        connection: found.connection.normalized(),
+        ..found
+    }
+}
+
+async fn provider_discovery(cli: Option<&CliInvocation>, account: &Account) -> Discovery {
     match account.provider {
         Provider::Github => github::discover(cli, &account.id).await,
         Provider::Vercel => vercel::discover(cli, &account.id).await,
@@ -91,6 +109,7 @@ pub async fn discover(cli: Option<&CliInvocation>, account: &Account) -> Discove
                 targets: Vec::new(),
                 aws_profiles: Vec::new(),
                 issues: vec![crate::models::Issue {
+                    kind: crate::models::IssueKind::Other,
                     provider: account.provider,
                     connection_id: Some(account.id.clone()),
                     target_id: None,
@@ -131,24 +150,27 @@ pub async fn active(
     cli: Option<&CliInvocation>,
     target: &Target,
     identity: Option<&str>,
-) -> Result<ActivityPage, String> {
+) -> Result<ActivityPage, QueryError> {
     if target.provider == Provider::Bitbucket {
-        return bitbucket::active(target).await;
+        return Ok(bitbucket::active(target).await?);
     }
     if matches!(
         target.provider,
         Provider::CloudflarePages | Provider::CloudflareWorkers
     ) {
-        return hosting::active_api(target).await;
+        return Ok(hosting::active_api(target).await?);
     }
     let cli = cli.ok_or_else(|| {
-        format!(
-            "{} CLI is not installed or this account must be reconnected.",
-            target.provider.as_str()
+        QueryError::new(
+            IssueKind::MissingCli,
+            format!(
+                "{} CLI is not installed or this account must be reconnected.",
+                target.provider.as_str()
+            ),
         )
     })?;
     if target.provider == Provider::Firebase {
-        return mobile::firebase::active_api(cli, target).await;
+        return Ok(mobile::firebase::active_api(cli, target).await?);
     }
     match target.provider {
         Provider::Eas => mobile::eas::active(cli, target).await,
@@ -156,7 +178,7 @@ pub async fn active(
         Provider::Vercel => vercel::active(cli, target, identity).await,
         _ => return Ok(ActivityPage::default()),
     }
-    .map_err(|error| error.user_message(target.provider.as_str()))
+    .map_err(|error| error.query_error(target.provider.as_str()))
 }
 
 pub async fn page(
@@ -165,7 +187,7 @@ pub async fn page(
     cursor: Option<&str>,
     identity: Option<&str>,
     hours: u32,
-) -> Result<ActivityPage, String> {
+) -> Result<ActivityPage, QueryError> {
     target.validate()?;
     if cursor.is_some_and(|value| {
         value.is_empty() || value.len() > 2048 || value.chars().any(char::is_control)
@@ -173,22 +195,25 @@ pub async fn page(
         return Err("Invalid history cursor.".into());
     }
     if target.provider == Provider::Aws {
-        return aws::page(target, cursor, hours).await;
+        return Ok(aws::page(target, cursor, hours).await?);
     }
     if target.provider == Provider::Bitbucket {
-        return bitbucket::page(target, cursor).await;
+        return Ok(bitbucket::page(target, cursor).await?);
     }
     if matches!(
         target.provider,
         Provider::CloudflarePages | Provider::CloudflareWorkers
     ) {
-        return hosting::page_api(target, cursor).await;
+        return Ok(hosting::page_api(target, cursor).await?);
     }
     if target.provider == Provider::Firebase {
         let cli = cli.ok_or_else(|| {
-            "Google Cloud CLI is not installed. Sign in with gcloud auth login.".to_owned()
+            QueryError::new(
+                IssueKind::MissingCli,
+                "Google Cloud CLI is not installed. Sign in with gcloud auth login.",
+            )
         })?;
-        return mobile::firebase::page_api(cli, target, cursor).await;
+        return Ok(mobile::firebase::page_api(cli, target, cursor).await?);
     }
     let api_result = match target.provider {
         Provider::Github => Some(match cli {
@@ -206,12 +231,15 @@ pub async fn page(
         _ => None,
     };
     if let Some(result) = api_result {
-        return result.map_err(|error| error.user_message(target.provider.as_str()));
+        return result.map_err(|error| error.query_error(target.provider.as_str()));
     }
     let cli = cli.ok_or_else(|| {
-        format!(
-            "{} CLI is not installed. Connect its local CLI session first.",
-            target.provider.as_str()
+        QueryError::new(
+            IssueKind::MissingCli,
+            format!(
+                "{} CLI is not installed. Connect its local CLI session first.",
+                target.provider.as_str()
+            ),
         )
     })?;
     match target.provider {
@@ -228,5 +256,5 @@ pub async fn page(
         | Provider::Azure => cloud::page(cli, target, cursor).await,
         _ => mobile::page(cli, target, cursor).await,
     }
-    .map_err(|error| error.user_message(target.provider.as_str()))
+    .map_err(|error| error.query_error(target.provider.as_str()))
 }

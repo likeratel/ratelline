@@ -36,6 +36,8 @@ pub async fn change_settings(
 
 #[tauri::command]
 pub async fn refresh(app: AppHandle, state: State<'_, AppState>) -> Result<Snapshot, String> {
+    // A user-requested check re-evaluates unbound GitHub connections immediately.
+    state.forget_github_pin_attempts().await;
     Ok(state.refresh(&app).await)
 }
 
@@ -152,6 +154,25 @@ pub async fn get_github_cli_accounts(state: State<'_, AppState>) -> Result<Vec<S
         .map_err(|error| error.user_message("GitHub"))
 }
 
+/// Lists gh accounts with their sign-in state. The active flag is informational;
+/// GitHub connections always use their own selected account.
+#[tauri::command]
+pub async fn get_github_cli_account_states(
+    state: State<'_, AppState>,
+) -> Result<Vec<crate::github_cli_accounts::GithubCliAccount>, String> {
+    state.github_account_states().await
+}
+
+/// Reports, for each signed-in gh account, whether it can read every repository
+/// selected for the connection. Only repository IDs and logins are returned.
+#[tauri::command]
+pub async fn diagnose_github_connection(
+    state: State<'_, AppState>,
+    connection_id: String,
+) -> Result<Vec<crate::state::GithubAccountAccess>, String> {
+    state.diagnose_github_connection(&connection_id).await
+}
+
 #[tauri::command]
 pub async fn connect_github_cli_account(
     app: AppHandle,
@@ -159,9 +180,16 @@ pub async fn connect_github_cli_account(
     provider: Provider,
     connection_id: String,
     username: String,
+    allow_identity_change: Option<bool>,
 ) -> Result<Account, String> {
     state
-        .connect_github_cli_account(provider, &connection_id, &username, &app)
+        .connect_github_cli_account(
+            provider,
+            &connection_id,
+            &username,
+            allow_identity_change.unwrap_or(false),
+            &app,
+        )
         .await
 }
 

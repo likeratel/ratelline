@@ -1,0 +1,209 @@
+.connection-fixes {
+  margin: 0 0 var(--space-4);
+  padding: var(--space-3);
+  border: 1px solid #44392b;
+  border-radius: var(--radius-control);
+  background: var(--canvas);
+}
+.connection-fixes h2 {
+  font-size: 13px;
+}
+.connection-fixes > .field-help {
+  margin-top: var(--space-1);
+}
+.connection-fixes > ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: var(--space-3) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.connection-fix-card {
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--surface);
+}
+.connection-fix-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.connection-fix-heading strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  font-size: 12px;
+}
+.connection-fix-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 12px;
+}
+.connection-fix-cause {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  color: #c5af88;
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+.connection-fix-cause svg {
+  flex-shrink: 0;
+  margin-top: 2px;
+}
+.connection-fix-detail summary,
+.connection-fix-detail p {
+  color: var(--muted);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.connection-fix-actions,
+.connection-fix-followup {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: 12px;
+  line-height: 1.5;
+}
+.connection-fix-followup > p {
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
+}
+.connection-fix-error {
+  color: #c68383;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.command-copy {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+}
+.command-copy code {
+  min-width: 0;
+  padding: 3px 7px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-compact);
+  background: var(--canvas);
+  font-size: 12px;
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+.command-copy .field-help {
+  margin-top: 0;
+}
+.github-account-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  color: var(--muted);
+  font-size: 12px;
+}
+.github-account-list {
+  display: grid;
+  gap: var(--space-2);
+  margin-bottom: var(--space-3);
+  padding: var(--space-3);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-control);
+  background: var(--canvas);
+}
+.github-account-list > header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  font-size: 12px;
+}
+.github-account-list > ul {
+  display: grid;
+  gap: var(--space-2);
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.github-account-callout {
+  color: #c5af88;
+  font-size: 12px;
+  overflow-wrap: anywhere;
+}
+.github-account-row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2);
+  min-width: 0;
+  padding: var(--space-2);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-compact);
+  background: var(--surface);
+}
+.github-account-row > div {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  font-size: 12px;
+}
+.github-account-row strong {
+  overflow-wrap: anywhere;
+}
+.github-account-row .access {
+  flex-basis: 100%;
+  color: var(--muted);
+}
+.github-account-row .access.ok {
+  color: #97b4a5;
+}
+.account-badge {
+  padding: 1px 6px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-compact);
+  color: var(--muted);
+  font-size: 11px;
+}
+.account-badge.current {
+  color: #97b4a5;
+  border-color: #3b4a42;
+}
+.identity-change-confirm {
+  display: flex;
+  flex-basis: 100%;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  border: 1px solid #44392b;
+  border-radius: var(--radius-compact);
+  font-size: 12px;
+  line-height: 1.5;
+}
+.identity-change-confirm > p {
+  flex-basis: 100%;
+  overflow-wrap: anywhere;
+}
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+  border: 0;
+}

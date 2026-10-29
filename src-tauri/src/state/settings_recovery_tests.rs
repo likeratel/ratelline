@@ -27,6 +27,7 @@ async fn unreadable_settings_remain_visible_and_block_changes_after_refresh() {
         history_cache: Mutex::new(HistoryCache::default()),
         notification_engine: Mutex::new(NotificationEngine::default()),
         login_statuses: Mutex::new(HashMap::new()),
+        github_pin_attempts: Mutex::new(HashMap::new()),
     };
     let refreshed = state.refresh(&NoopPublisher).await;
     assert_eq!(refreshed.settings_error, snapshot.settings_error);

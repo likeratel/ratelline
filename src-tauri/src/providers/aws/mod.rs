@@ -107,6 +107,7 @@ async fn checked_connection(config: &aws_types::SdkConfig, connection_id: &str) 
             let account = identity.account().unwrap_or("Unknown account");
             let arn = identity.arn().unwrap_or("Unknown identity");
             Connection {
+                kind: None,
                 connection_id: connection_id.into(),
                 provider: AWS_PROVIDER,
                 status: ConnectionStatus::Connected,

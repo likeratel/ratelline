@@ -700,6 +700,7 @@ fn is_active(activity: &Activity) -> bool {
 
 fn connected(account: &Account, version: Option<String>, identity: &str) -> Connection {
     Connection {
+        kind: None,
         connection_id: account.id.clone(),
         provider: Provider::Firebase,
         status: ConnectionStatus::Connected,
@@ -724,6 +725,7 @@ fn discovery_from_connection(connection: Connection) -> Discovery {
 
 fn issue(account: &Account, target_id: Option<&str>, message: impl Into<String>) -> Issue {
     Issue {
+        kind: crate::models::IssueKind::Other,
         provider: Provider::Firebase,
         connection_id: Some(account.id.clone()),
         target_id: target_id.map(str::to_owned),
@@ -733,6 +735,7 @@ fn issue(account: &Account, target_id: Option<&str>, message: impl Into<String>)
 
 fn target_issue(target: &Target, message: impl Into<String>) -> Issue {
     Issue {
+        kind: crate::models::IssueKind::Other,
         provider: Provider::Firebase,
         connection_id: Some(target.connection_id.clone()),
         target_id: Some(target.id.clone()),

@@ -25,6 +25,7 @@ fn test_state(directory: &Path) -> AppState {
         history_cache: Mutex::new(HistoryCache::default()),
         notification_engine: Mutex::new(NotificationEngine::default()),
         login_statuses: Mutex::new(HashMap::new()),
+        github_pin_attempts: Mutex::new(HashMap::new()),
     }
 }
 
@@ -63,6 +64,7 @@ fn activity(connection_id: &str, project: &str) -> Activity {
 
 fn connection(connection_id: &str, account: Option<&str>, status: ConnectionStatus) -> Connection {
     Connection {
+        kind: None,
         connection_id: connection_id.into(),
         provider: Provider::Github,
         status,
@@ -76,6 +78,7 @@ fn connection(connection_id: &str, account: Option<&str>, status: ConnectionStat
 fn same_external_target_isolated_by_connection() {
     let targets = [target("github-one", "a")];
     let issues = [Issue {
+        kind: crate::models::IssueKind::Other,
         provider: Provider::Github,
         connection_id: Some("github-one".into()),
         message: "failed".into(),
@@ -120,6 +123,7 @@ fn failed_account_does_not_slow_healthy_idle_account() {
         connection("github-work", None, ConnectionStatus::SignedOut),
     ];
     snapshot.issues.push(Issue {
+        kind: crate::models::IssueKind::Other,
         provider: Provider::Github,
         connection_id: Some("github-work".into()),
         message: "Sign in".into(),

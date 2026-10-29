@@ -28,6 +28,8 @@ import {
 import { ProviderIcon } from "./ProviderIcon";
 import { useActivityDismissal } from "../useActivityDismissal";
 import { ActivityUndo } from "./ActivityUndo";
+import { groupIssues } from "../connectionFixes";
+import { causeCopy, connectionFixCopy } from "../connectionFixCopy";
 import { SettingsRecoveryNotice } from "./SettingsRecoveryNotice";
 import { activityCopy } from "../activityCopy";
 import { activityIdentity, activityKeyString } from "../domain";
@@ -271,6 +273,25 @@ function TrayPanelContent({
             (!issue.targetId || issue.targetId === target.id),
         ),
     ) ?? [];
+  const panelIssueRows = [
+    ...new Set(panelIssues.map((issue) => issue.provider)),
+  ].flatMap((issueProvider) =>
+    groupIssues(
+      panelIssues.filter((issue) => issue.provider === issueProvider),
+    ).map((group) => ({
+      key: `${issueProvider}:${group.kind}:${group.messages[0]}`,
+      provider: issueProvider,
+      text:
+        group.kind === "other"
+          ? group.messages[0]
+          : group.targetIds.length > 1
+            ? connectionFixCopy(locale, "causeTargets", {
+                cause: causeCopy(locale, group.kind),
+                count: group.targetIds.length,
+              })
+            : causeCopy(locale, group.kind),
+    })),
+  );
   const active = items.filter(isActive);
   const complete = snapshot
     ? sortPanelActivities(latestCompleted(items), snapshot.settings.panel)
@@ -355,12 +376,14 @@ function TrayPanelContent({
             {error}
           </p>
         )}
-        {panelIssues.length > 0 && (
+        {panelIssueRows.length > 0 && (
           <details className="panel-issues">
-            <summary>{t("tray.issues", { count: panelIssues.length })}</summary>
-            {panelIssues.map((issue, index) => (
-              <p key={`${issue.provider}:${index}`}>
-                {PROVIDER_NAMES[issue.provider]} · {issue.message}
+            <summary>
+              {t("tray.issues", { count: panelIssueRows.length })}
+            </summary>
+            {panelIssueRows.map((row) => (
+              <p key={row.key}>
+                {PROVIDER_NAMES[row.provider]} · {row.text}
               </p>
             ))}
           </details>

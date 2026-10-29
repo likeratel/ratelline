@@ -167,6 +167,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
                 .is_some_and(|environment| environment != "AzureCloud") =>
         {
             Connection {
+                kind: None,
                 connection_id: account.id.clone(),
                 provider: PROVIDER,
                 status: ConnectionStatus::Error,
@@ -180,6 +181,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
         }
         Ok(subscription) => match subscription.user {
             Some(user) if !user.name.trim().is_empty() => Connection {
+                kind: None,
                 connection_id: account.id.clone(),
                 provider: PROVIDER,
                 status: ConnectionStatus::Connected,

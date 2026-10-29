@@ -10,6 +10,8 @@ import { queryStateForTarget, summarizeQueryHealth } from "../queryHealth";
 import { monitorCopy } from "../monitorCopy";
 import { copy, type FeatureKey } from "../featureCopy";
 import { ProviderIcon } from "./ProviderIcon";
+import { connectionFixes, groupIssues } from "../connectionFixes";
+import { actionCopy, causeCopy, connectionFixCopy } from "../connectionFixCopy";
 export function ServiceHealth({
   snapshot,
   onConnect,
@@ -58,6 +60,17 @@ export function ServiceHealth({
               account.id === id && account.provider === issue.provider,
           )),
     );
+  const fixes = connectionFixes(snapshot);
+  const accountIssues = (account: (typeof accounts)[number]) =>
+    snapshot.issues.filter(
+      (issue) =>
+        issue.connectionId === account.id ||
+        (!issue.connectionId && issue.provider === account.provider),
+    );
+  const groupedIssueCount = accounts.reduce(
+    (count, account) => count + groupIssues(accountIssues(account)).length,
+    0,
+  );
   const orderedAccounts = [...accounts].sort(
     (left, right) =>
       Number(needsAttention(right.id)) - Number(needsAttention(left.id)),
@@ -67,8 +80,8 @@ export function ServiceHealth({
     <details className="service-health" open={expanded}>
       <summary>
         {copy(locale, "health")}
-        {relevantIssues.length > 0
-          ? ` · ${copy(locale, "issuesCount", { count: relevantIssues.length })}`
+        {groupedIssueCount > 0
+          ? ` · ${copy(locale, "issuesCount", { count: groupedIssueCount })}`
           : ""}
         {snapshot.refreshing ? ` · ${copy(locale, "checking")}` : ""}
       </summary>
@@ -83,11 +96,9 @@ export function ServiceHealth({
           (item) => item.connectionId === account.id,
         );
         const health = summarizeQueryHealth(snapshot, targets);
-        const issues = snapshot.issues.filter(
-          (issue) =>
-            issue.connectionId === account.id ||
-            (!issue.connectionId && issue.provider === account.provider),
-        );
+        const issues = accountIssues(account);
+        const issueGroups = groupIssues(issues);
+        const fix = fixes.find((item) => item.connectionId === account.id);
         const key: FeatureKey =
           connection?.status === "signed-out"
             ? "signedOut"
@@ -157,18 +168,30 @@ export function ServiceHealth({
             </div>
             {needsHelp && (
               <>
-                <p>{copy(locale, help)}</p>
+                <p>{fix ? causeCopy(locale, fix.kind) : copy(locale, help)}</p>
                 <button
                   className="text-button"
                   onClick={() => onConnect(account.provider, account.id)}
                 >
-                  {copy(locale, "reconnect")}
+                  {fix
+                    ? actionCopy(locale, fix.action)
+                    : copy(locale, "reconnect")}
                 </button>
                 <details>
                   <summary>{copy(locale, "details")}</summary>
-                  {connection?.message && <p>{connection.message}</p>}
-                  {issues.map((issue, index) => (
-                    <p key={index}>{issue.message}</p>
+                  {connection?.status !== "connected" &&
+                    connection?.message && <p>{connection.message}</p>}
+                  {issueGroups.map((group) => (
+                    <p key={`${group.kind}:${group.messages[0]}`}>
+                      {group.kind === "other"
+                        ? group.messages[0]
+                        : connectionFixCopy(locale, "causeTargets", {
+                            cause: causeCopy(locale, group.kind),
+                            count: group.connectionWide
+                              ? targets.length
+                              : group.targetIds.length,
+                          })}
+                    </p>
                   ))}
                 </details>
               </>

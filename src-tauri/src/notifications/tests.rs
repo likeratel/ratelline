@@ -790,3 +790,45 @@ fn notification_keeps_external_multiline_text_within_two_body_lines() {
         "Deploy production\nExample App · release next · alex dev"
     );
 }
+
+#[test]
+fn forgotten_target_rebaselines_silently_after_an_identity_change() {
+    let selected = target();
+    let prefs = preferences(NotificationScope::All);
+    let mut engine = NotificationEngine::default();
+    let running = activity("run", ActivityStatus::Running, Ownership::Mine);
+    observe(
+        &mut engine,
+        &selected,
+        std::slice::from_ref(&running),
+        &prefs,
+        1,
+    );
+    engine.forget_targets(&[selected.key()]);
+    let finished = Activity {
+        status: ActivityStatus::Success,
+        updated_at: "2026-09-30T00:03:00Z".into(),
+        ..running
+    };
+    let backlog = [
+        finished,
+        activity("older", ActivityStatus::Failed, Ownership::Mine),
+    ];
+    assert!(
+        observe(&mut engine, &selected, &backlog, &prefs, 2).is_empty(),
+        "the first query after forgetting must only rebuild the baseline"
+    );
+    let next = Activity {
+        status: ActivityStatus::Failed,
+        updated_at: "2026-09-30T00:05:00Z".into(),
+        ..activity("next", ActivityStatus::Running, Ownership::Mine)
+    };
+    observe(
+        &mut engine,
+        &selected,
+        &[activity("next", ActivityStatus::Running, Ownership::Mine)],
+        &prefs,
+        3,
+    );
+    assert_eq!(observe(&mut engine, &selected, &[next], &prefs, 4).len(), 1);
+}

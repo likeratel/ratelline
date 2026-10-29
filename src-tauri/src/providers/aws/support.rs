@@ -321,6 +321,7 @@ pub(super) fn disconnected_discovery(
 
 pub(super) fn partial_issue(connection_id: &str, message: impl Into<String>) -> Issue {
     Issue {
+        kind: crate::models::IssueKind::Other,
         provider: AWS_PROVIDER,
         connection_id: Some(connection_id.into()),
         message: message.into(),
@@ -330,6 +331,7 @@ pub(super) fn partial_issue(connection_id: &str, message: impl Into<String>) -> 
 
 pub(super) fn target_issue(target: &Target, message: impl Into<String>) -> Issue {
     Issue {
+        kind: crate::models::IssueKind::Other,
         provider: AWS_PROVIDER,
         connection_id: Some(target.connection_id.clone()),
         message: message.into(),

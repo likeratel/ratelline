@@ -191,6 +191,7 @@ pub async fn connection(account: &Account) -> Connection {
         Ok((api, _)) => match api.get::<User>(api_url(&["user"], &[]).unwrap()).await {
             Ok(user) if validate_user(&user).is_ok() && same_identity(&user, &api.credential) => {
                 Connection {
+                    kind: None,
                     connection_id: account.id.clone(),
                     provider: Provider::Bitbucket,
                     status: ConnectionStatus::Connected,
@@ -263,6 +264,7 @@ pub async fn discover(account: &Account) -> Discovery {
     }
     Discovery {
         connection: Connection {
+            kind: None,
             connection_id: account.id.clone(),
             provider: Provider::Bitbucket,
             status: ConnectionStatus::Connected,
@@ -747,6 +749,7 @@ fn disconnected(account: &Account, message: impl Into<String>) -> Connection {
 
 fn issue(connection_id: &str, target_id: Option<String>, message: &str) -> Issue {
     Issue {
+        kind: crate::models::IssueKind::Other,
         provider: Provider::Bitbucket,
         connection_id: Some(connection_id.into()),
         target_id,

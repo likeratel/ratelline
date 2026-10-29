@@ -726,6 +726,9 @@ mod settings_change_tests {
 mod account_tests {
     use super::*;
 
+    /// Unbound GitHub connections still load so existing settings are never
+    /// locked; they report NeedsAccount at query time instead of using the
+    /// active gh account (see `cli::tests`).
     #[test]
     fn legacy_github_account_without_cli_username_still_loads_for_explicit_rebind() {
         let account: Account = serde_json::from_str(
@@ -734,6 +737,56 @@ mod account_tests {
         .expect("legacy account");
         assert_eq!(account.cli_username, None);
         account.validate().expect("legacy account remains valid");
+    }
+
+    #[test]
+    fn local_github_slot_loads_unbound_and_accepts_a_selected_user() {
+        let mut settings: Settings = serde_json::from_str(
+            r#"{"targets":[{"id":"example-org/app","provider":"github","connectionId":"github:local","name":"app","description":null,"metadata":{}}],"accounts":[{"id":"github:local","provider":"github","label":"GitHub (local)","mode":"local","profile":null}]}"#,
+        )
+        .expect("legacy settings");
+        settings.migrate_legacy();
+        settings.validate().expect("unbound local slot stays valid");
+        let local = settings
+            .accounts
+            .iter_mut()
+            .find(|account| account.id == LOCAL_GITHUB_ID)
+            .unwrap();
+        local.cli_username = Some("example-user".into());
+        local.profile = Some("42".into());
+        settings
+            .validate()
+            .expect("the local slot keeps its ID and mode when bound");
+        let deployments = Account {
+            id: "github-deployments:local".into(),
+            provider: Provider::GithubDeployments,
+            label: "Deployments".into(),
+            mode: AccountMode::Local,
+            profile: None,
+            cli_username: Some("example-user".into()),
+        };
+        deployments
+            .validate()
+            .expect("legacy deployments slot may bind");
+    }
+
+    #[test]
+    fn issue_and_connection_kinds_default_for_older_payloads() {
+        let issue: Issue = serde_json::from_str(
+            r#"{"provider":"github","connectionId":"github:local","message":"m","targetId":null}"#,
+        )
+        .unwrap();
+        assert_eq!(issue.kind, IssueKind::Other);
+        let connection: Connection = serde_json::from_str(
+            r#"{"connectionId":"github:local","provider":"github","status":"signed-out","account":null,"message":null,"cliVersion":null}"#,
+        )
+        .unwrap();
+        assert_eq!(connection.kind, None);
+        assert_eq!(connection.normalized().kind, Some(IssueKind::SignedOut));
+        assert_eq!(
+            serde_json::to_value(IssueKind::NeedsAccount).unwrap(),
+            "needsAccount"
+        );
     }
 
     #[test]
@@ -784,6 +837,35 @@ pub enum ConnectionStatus {
     Unconfigured,
 }
 
+/// Why a connection or query needs attention. The UI translates this value;
+/// `message` stays as an English fallback for older clients and logs.
+#[derive(Clone, Copy, Debug, Default, Deserialize, Eq, Hash, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub enum IssueKind {
+    SignedOut,
+    MissingCli,
+    NoAccess,
+    RateLimited,
+    Network,
+    TimedOut,
+    NeedsAccount,
+    AccountMismatch,
+    UnsupportedVersion,
+    #[default]
+    Other,
+}
+
+impl IssueKind {
+    pub fn for_status(status: ConnectionStatus) -> Option<Self> {
+        match status {
+            ConnectionStatus::Connected => None,
+            ConnectionStatus::SignedOut => Some(Self::SignedOut),
+            ConnectionStatus::MissingCli => Some(Self::MissingCli),
+            ConnectionStatus::Error | ConnectionStatus::Unconfigured => Some(Self::Other),
+        }
+    }
+}
+
 #[derive(Clone, Debug, Deserialize, Eq, PartialEq, Serialize)]
 #[serde(rename_all = "camelCase")]
 pub struct Connection {
@@ -793,6 +875,8 @@ pub struct Connection {
     pub account: Option<String>,
     pub message: Option<String>,
     pub cli_version: Option<String>,
+    #[serde(default)]
+    pub kind: Option<IssueKind>,
 }
 
 impl Connection {
@@ -809,7 +893,25 @@ impl Connection {
             account: None,
             message: Some(message.into()),
             cli_version: None,
+            kind: IssueKind::for_status(status),
         }
+    }
+
+    pub fn with_kind(self, kind: IssueKind) -> Self {
+        Self {
+            kind: Some(kind),
+            ..self
+        }
+    }
+
+    /// Fills in a kind from the status for providers that do not classify their
+    /// failures, and clears it for connected results.
+    pub fn normalized(self) -> Self {
+        let kind = match self.status {
+            ConnectionStatus::Connected => None,
+            status => self.kind.or_else(|| IssueKind::for_status(status)),
+        };
+        Self { kind, ..self }
     }
 }
 
@@ -843,6 +945,52 @@ pub struct Issue {
     pub connection_id: Option<String>,
     pub message: String,
     pub target_id: Option<String>,
+    #[serde(default)]
+    pub kind: IssueKind,
+}
+
+impl Issue {
+    pub fn same_cause(&self, other: &Self) -> bool {
+        self.kind != IssueKind::Other
+            && self.kind == other.kind
+            && self.provider == other.provider
+            && self.connection_id == other.connection_id
+            && self.target_id == other.target_id
+    }
+}
+
+/// A failed target query with a translatable cause.
+#[derive(Clone, Debug, Eq, PartialEq)]
+pub struct QueryError {
+    pub kind: IssueKind,
+    pub message: String,
+}
+
+impl QueryError {
+    pub fn new(kind: IssueKind, message: impl Into<String>) -> Self {
+        Self {
+            kind,
+            message: message.into(),
+        }
+    }
+}
+
+impl From<String> for QueryError {
+    fn from(message: String) -> Self {
+        Self::new(IssueKind::Other, message)
+    }
+}
+
+impl From<&str> for QueryError {
+    fn from(message: &str) -> Self {
+        Self::new(IssueKind::Other, message)
+    }
+}
+
+impl std::fmt::Display for QueryError {
+    fn fmt(&self, formatter: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
+        formatter.write_str(&self.message)
+    }
 }
 
 #[derive(Clone, Copy, Debug, Deserialize, Eq, PartialEq, Serialize)]

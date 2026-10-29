@@ -24,6 +24,7 @@ pub(super) fn failed_connection(
         _ => ConnectionStatus::Error,
     };
     Connection {
+        kind: None,
         connection_id: account.id.clone(),
         provider: account.provider,
         status,
@@ -58,6 +59,7 @@ pub(super) fn issue(
     message: impl Into<String>,
 ) -> Issue {
     Issue {
+        kind: crate::models::IssueKind::Other,
         provider,
         connection_id: Some(connection_id.to_owned()),
         message: message.into(),

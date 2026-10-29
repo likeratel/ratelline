@@ -106,6 +106,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
         .await
     {
         Ok(user) if !user.email.trim().is_empty() => Connection {
+            kind: None,
             connection_id: account.id.clone(),
             provider: PROVIDER,
             status: ConnectionStatus::Connected,

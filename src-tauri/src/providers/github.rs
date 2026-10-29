@@ -8,7 +8,7 @@ use crate::{
     cli::{CliError, CliInvocation},
     models::{
         Activity, ActivityPage, ActivityStatus, Connection, ConnectionStatus, Discovery, Issue,
-        Ownership, Provider, Target,
+        IssueKind, Ownership, Provider, Target,
     },
 };
 
@@ -90,6 +90,7 @@ pub async fn discover(cli: Option<&CliInvocation>, connection_id: &str) -> Disco
     };
     let issues = truncated
         .then(|| Issue {
+            kind: IssueKind::Other,
             provider: Provider::Github,
             connection_id: Some(connection_id.into()),
             message: format!(
@@ -123,6 +124,7 @@ pub async fn connection(cli: Option<&CliInvocation>, connection_id: &str) -> Con
     let api = super::api::ApiClient::github(cli);
     match verified_user(&api).await {
         Ok(user) => Connection {
+            kind: None,
             connection_id: connection_id.into(),
             provider: Provider::Github,
             status: ConnectionStatus::Connected,
@@ -201,6 +203,7 @@ fn failed_discovery(error: CliError, version: Option<String>, connection_id: &st
     };
     Discovery {
         connection: Connection {
+            kind: Some(error.issue_kind()),
             connection_id: connection_id.into(),
             provider: Provider::Github,
             status,
@@ -259,27 +262,43 @@ pub async fn active(
     )
     .await;
     let mut runs = Vec::new();
-    let mut issues = Vec::new();
+    let mut truncated_statuses = Vec::new();
+    let mut failures = Vec::new();
     for (status, (mut status_runs, truncated, error)) in ACTIVE_STATUSES.into_iter().zip(results) {
         runs.append(&mut status_runs);
         if truncated {
-            issues.push(target_issue(
-                target,
-                format!(
-                    "GitHub active {status} runs reached the {MAX_ACTIVE_RUN_PAGES}-page safety limit. Active results are partial."
-                ),
-            ));
+            truncated_statuses.push(status);
         }
         if let Some(error) = error {
-            issues.push(target_issue(
-                target,
-                format!(
-                    "GitHub active {status} probe failed: {}",
-                    error.user_message("GitHub")
-                ),
-            ));
+            failures.push((status, error));
         }
     }
+    let mut issues = Vec::new();
+    if !truncated_statuses.is_empty() {
+        issues.push(target_issue(
+            target,
+            format!(
+                "GitHub active runs ({}) reached the {MAX_ACTIVE_RUN_PAGES}-page safety limit. Active results are partial.",
+                truncated_statuses.join(", ")
+            ),
+            IssueKind::Other,
+        ));
+    }
+    issues.extend(
+        super::grouped_probe_failures(&failures)
+            .into_iter()
+            .map(|(error, statuses)| {
+                target_issue(
+                    target,
+                    format!(
+                        "GitHub could not read active runs ({}): {}",
+                        statuses.join(", "),
+                        error.user_message("GitHub")
+                    ),
+                    error.issue_kind(),
+                )
+            }),
+    );
     let mut seen = HashSet::new();
     let activities = runs
         .into_iter()
@@ -379,8 +398,9 @@ fn has_next_page(
     Ok(returned == page_size && offset.saturating_add(returned) < total_count)
 }
 
-fn target_issue(target: &Target, message: String) -> Issue {
+fn target_issue(target: &Target, message: String, kind: IssueKind) -> Issue {
     Issue {
+        kind,
         provider: Provider::Github,
         connection_id: Some(target.connection_id.clone()),
         message,
@@ -402,6 +422,7 @@ pub async fn collect(
         return (
             Vec::new(),
             vec![Issue {
+                kind: IssueKind::MissingCli,
                 provider: Provider::Github,
                 connection_id: Some(connection_id.into()),
                 message: "GitHub CLI is unavailable. Cached activity is shown when available."
@@ -415,6 +436,7 @@ pub async fn collect(
         return (
             Vec::new(),
             vec![Issue {
+                kind: error.issue_kind(),
                 provider: Provider::Github,
                 connection_id: Some(connection_id.into()),
                 message: error.user_message("GitHub"),
@@ -431,6 +453,7 @@ pub async fn collect(
                 activities.append(&mut target_activities);
                 if truncated {
                     issues.push(Issue {
+            kind: IssueKind::Other,
                         provider: Provider::Github,
                         connection_id: Some(connection_id.into()),
                         message: format!(
@@ -442,6 +465,7 @@ pub async fn collect(
                 }
             }
             Err(error) => issues.push(Issue {
+                kind: error.issue_kind(),
                 provider: Provider::Github,
                 connection_id: Some(connection_id.into()),
                 message: error.user_message("GitHub"),
@@ -602,7 +626,7 @@ fn validate_github_url(value: &str) -> Result<(), CliError> {
     }
 }
 
-fn validate_repository_id(value: &str) -> Result<(), ()> {
+pub(crate) fn validate_repository_id(value: &str) -> Result<(), ()> {
     let mut parts = value.split('/');
     let valid_part = |part: &str| {
         !part.is_empty()

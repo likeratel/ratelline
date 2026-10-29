@@ -115,6 +115,7 @@ pub async fn discover(cli: Option<&CliInvocation>, account: &Account) -> Discove
 
 fn connected(connection_id: &str, version: Option<String>, user: &NetlifyUser) -> Connection {
     Connection {
+        kind: None,
         connection_id: connection_id.to_owned(),
         provider: Provider::Netlify,
         status: ConnectionStatus::Connected,

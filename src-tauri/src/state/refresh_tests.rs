@@ -68,6 +68,7 @@ fn state() -> AppState {
         history_cache: Mutex::new(HistoryCache::default()),
         notification_engine: Mutex::new(NotificationEngine::default()),
         login_statuses: Mutex::new(HashMap::new()),
+        github_pin_attempts: Mutex::new(HashMap::new()),
     }
 }
 #[derive(Default)]
@@ -133,6 +134,7 @@ async fn warning_rows_notify_and_failed_native_delivery_retries_next_generation(
         .await;
 
     let provider_warning = Issue {
+        kind: crate::models::IssueKind::Other,
         provider: selected.provider,
         connection_id: Some(selected.connection_id.clone()),
         target_id: Some(selected.id.clone()),
@@ -686,6 +688,7 @@ async fn account_identity_change_clears_loaded_history_and_chain() {
     let state = state();
     let selected = target("identity-bound-history");
     let old_connection = Connection {
+        kind: None,
         connection_id: selected.connection_id.clone(),
         provider: selected.provider,
         status: ConnectionStatus::Connected,
@@ -707,6 +710,7 @@ async fn account_identity_change_clears_loaded_history_and_chain() {
         snapshot.history = vec![history.entry.clone()];
     }
     let replacement = Connection {
+        kind: None,
         connection_id: selected.connection_id.clone(),
         provider: selected.provider,
         status: ConnectionStatus::Connected,
@@ -772,6 +776,7 @@ fn failed_recent_page_does_not_clear_a_pending_history_reset() {
             activities: Vec::new(),
             next_cursor: None,
             issues: vec![Issue {
+                kind: crate::models::IssueKind::Other,
                 provider: selected.provider,
                 connection_id: Some(selected.connection_id.clone()),
                 target_id: Some(selected.id.clone()),
@@ -846,6 +851,88 @@ fn failed_scan_preserves_cache_and_reports_partial_result() {
     assert_eq!(next.activities.len(), 1);
     assert_eq!(next.issues.len(), 1);
     assert!(next.last_updated_at.is_none());
+}
+
+#[test]
+fn one_cause_is_reported_once_per_target_across_recent_and_active_scans() {
+    let t = target("denied");
+    let other = target("other");
+    let current = Snapshot {
+        settings: Settings {
+            targets: vec![t.clone(), other.clone()],
+            ..Settings::default()
+        },
+        ..Snapshot::initial(Settings::default())
+    };
+    let denied =
+        |message: &str| crate::models::QueryError::new(crate::models::IssueKind::NoAccess, message);
+    let next = apply_page(
+        current,
+        &t,
+        Err(denied("GitHub could not access this resource.")),
+        PageKind::Recent,
+        1,
+    );
+    let active_issue = Issue {
+        provider: Provider::Github,
+        connection_id: Some(t.connection_id.clone()),
+        target_id: Some(t.id.clone()),
+        message: "GitHub could not read active runs (queued, in_progress): denied".into(),
+        kind: crate::models::IssueKind::NoAccess,
+    };
+    let next = apply_page(
+        next,
+        &t,
+        Ok(ActivityPage {
+            issues: vec![active_issue.clone()],
+            ..ActivityPage::default()
+        }),
+        PageKind::Active,
+        1,
+    );
+    let next = apply_page(
+        next,
+        &other,
+        Err(denied("GitHub could not access this resource.")),
+        PageKind::Recent,
+        1,
+    );
+    let kinds: Vec<_> = next
+        .issues
+        .iter()
+        .map(|issue| (issue.target_id.clone(), issue.kind))
+        .collect();
+    assert_eq!(
+        kinds,
+        vec![
+            (Some(t.id.clone()), crate::models::IssueKind::NoAccess),
+            (Some(other.id.clone()), crate::models::IssueKind::NoAccess),
+        ]
+    );
+
+    // Unclassified issues keep their distinct messages.
+    let next = apply_page(
+        next,
+        &t,
+        Ok(ActivityPage {
+            issues: vec![
+                Issue {
+                    kind: crate::models::IssueKind::Other,
+                    message: "limit reached".into(),
+                    ..active_issue.clone()
+                },
+                Issue {
+                    kind: crate::models::IssueKind::Other,
+                    message: "unsupported response".into(),
+                    ..active_issue
+                },
+            ],
+            ..ActivityPage::default()
+        }),
+        PageKind::Active,
+        1,
+    );
+    assert_eq!(next.issues.len(), 4);
 }
 
 #[test]
@@ -1007,6 +1094,7 @@ fn partial_recent_rows_remain_partial_after_clean_active_scan() {
         Ok(ActivityPage {
             activities: vec![activity(&selected, "valid", ActivityStatus::Success)],
             issues: vec![Issue {
+                kind: crate::models::IssueKind::Other,
                 provider: selected.provider,
                 connection_id: Some(selected.connection_id.clone()),
                 target_id: Some(selected.id.clone()),
@@ -1324,6 +1412,7 @@ impl FakeGithub {
 printf '%s\n' "$*" >> "$0.calls"
 case "$*" in
   *--version*) printf 'gh version 2.90.0\n';;
+  *'auth token '*) printf 'synthetic-token\n';;
   *'api user '*|*'api /user '*) sleep IDENTITY_DELAY; printf '{"id":42,"login":"synthetic-user"}';;
   *'status='*) if [ "SLOW_ACTIVE" = true ]; then started=$(date +%s); while [ ! -e "$0.third-recent-started" ] && [ $(( $(date +%s) - started )) -lt 8 ]; do sleep 0.05; done; fi; printf 'active-finished\n' >> "$0.calls"; printf '{"total_count":0,"workflow_runs":[]}';;
   *'repos/sample/failing/actions/runs?per_page=20'*) printf '{';;
@@ -1342,15 +1431,12 @@ esac
         Self { directory, script }
     }
 
+    /// GitHub connections always read through a selected gh account, so the
+    /// fixture binds the local connection to the fake CLI's user.
     async fn configure(&self, state: &AppState, names: &[&str]) -> Vec<Target> {
         let targets: Vec<_> = names.iter().map(|name| target(name)).collect();
-        state.snapshot.write().await.settings.targets = targets.clone();
-        targets
-    }
-
-    async fn configure_bound(&self, state: &AppState, names: &[&str]) -> Vec<Target> {
-        let targets = self.configure(state, names).await;
         let mut snapshot = state.snapshot.write().await;
+        snapshot.settings.targets = targets.clone();
         snapshot.settings.accounts = snapshot
             .settings
             .accounts
@@ -1371,6 +1457,33 @@ esac
     }
 }
 
+/// Requests a refresh from inside the cycle as soon as a published snapshot shows
+/// the failing target in error while the slow target is still pending.
+#[cfg(unix)]
+struct RecoveryTrigger {
+    state: std::sync::Weak<AppState>,
+    failing_id: String,
+    slow_key: String,
+    triggered: std::sync::atomic::AtomicBool,
+}
+
+#[cfg(unix)]
+impl SnapshotPublisher for RecoveryTrigger {
+    fn publish_snapshot(&self, snapshot: &Snapshot) {
+        let failed = snapshot.query_health.iter().any(|health| {
+            health.target_id == self.failing_id && health.status == QueryHealthStatus::Error
+        });
+        if failed
+            && snapshot.pending_targets.contains(&self.slow_key)
+            && !self.triggered.swap(true, AtomicOrdering::SeqCst)
+        {
+            if let Some(state) = self.state.upgrade() {
+                state.request_refresh();
+            }
+        }
+    }
+}
+
 #[cfg(unix)]
 #[tokio::test]
 async fn inflight_recovery_request_waits_for_lock_then_runs_exactly_one_followup() {
@@ -1386,13 +1499,21 @@ async fn inflight_recovery_request_waits_for_lock_then_runs_exactly_one_followup
     let targets = server.configure(&state, &["failing", "slow"]).await;
     let failing = targets[0].clone();
     let slow = targets[1].clone();
-    let publisher = std::sync::Arc::new(Recorder::default());
+    // The failing target is in error only until its quick active scan finishes, so
+    // the recovery request is sent from the publication that shows that state
+    // rather than by polling for it, which could miss the window.
+    let publisher = std::sync::Arc::new(RecoveryTrigger {
+        state: std::sync::Arc::downgrade(&state),
+        failing_id: failing.id.clone(),
+        slow_key: slow.key(),
+        triggered: std::sync::atomic::AtomicBool::new(false),
+    });
 
     let polling = tokio::spawn({
         let state = state.clone();
         let publisher = publisher.clone();
         async move {
-            assert!(state.refresh_wake.wait(Duration::from_secs(5)).await);
+            assert!(state.refresh_wake.wait(Duration::from_secs(20)).await);
             state.refresh(publisher.as_ref()).await
         }
     });
@@ -1402,23 +1523,11 @@ async fn inflight_recovery_request_waits_for_lock_then_runs_exactly_one_followup
         async move { state.refresh(publisher.as_ref()).await }
     });
 
-    tokio::time::timeout(Duration::from_secs(10), async {
-        loop {
-            let snapshot = state.snapshot().await;
-            let failed = snapshot.query_health.iter().any(|health| {
-                health.target_id == failing.id && health.status == QueryHealthStatus::Error
-            });
-            if failed && snapshot.pending_targets.contains(&slow.key()) {
-                break;
-            }
-            tokio::time::sleep(Duration::from_millis(5)).await;
-        }
-    })
-    .await
-    .expect("one target must fail while the slow target is still pending");
-    state.request_refresh();
-
     manual.await.expect("manual refresh task");
+    assert!(
+        publisher.triggered.load(AtomicOrdering::SeqCst),
+        "one target must fail while the slow target is still pending"
+    );
     let retry = polling.await.expect("polling follow-up task");
     assert_eq!(
         retry
@@ -1461,7 +1570,7 @@ async fn refresh_resolves_account_identity_once_for_many_targets() {
         .map(|index| format!("bulk-{index}"))
         .collect::<Vec<_>>();
     let names = names.iter().map(String::as_str).collect::<Vec<_>>();
-    server.configure_bound(&state, &names).await;
+    server.configure(&state, &names).await;
 
     let started = std::time::Instant::now();
     let done = state.refresh(&Recorder::default()).await;
@@ -1508,7 +1617,7 @@ async fn in_flight_refresh_restarts_once_and_includes_a_new_target() {
         store: SettingsStore::new(server.directory.clone()),
         ..state()
     });
-    server.configure_bound(&state, &["first"]).await;
+    server.configure(&state, &["first"]).await;
     let publisher = std::sync::Arc::new(Recorder::default());
     let refresh = tokio::spawn({
         let state = state.clone();

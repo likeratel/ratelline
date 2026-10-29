@@ -54,12 +54,13 @@ test("browser preview cannot pretend a real login succeeded", async ({
   await expect(
     page.getByRole("button", { name: "브라우저로 계정 연결" }),
   ).toHaveCount(0);
-  await page.locator(".authentication-details > summary").click();
+  await page.getByRole("button", { name: /^계정 바꾸기/ }).click();
+  const accounts = page.getByRole("region", { name: "GitHub 계정" });
   await expect(
-    page.getByText("브라우저 미리보기에서는 가상 CLI 계정을 사용합니다."),
+    accounts.getByText("브라우저 미리보기에서는 가상 CLI 계정을 사용합니다."),
   ).toBeVisible();
   await expect(
-    page.getByLabel("GitHub CLI 계정", { exact: true }),
+    accounts.getByRole("button", { name: "orbit-work 사용" }),
   ).toBeVisible();
   await expect(page.getByLabel("API 토큰", { exact: true })).toHaveCount(0);
 });

@@ -1,4 +1,5 @@
 mod auth;
+mod github_binding;
 mod history;
 mod provider_connections;
 mod refresh_wake;
@@ -19,6 +20,7 @@ use chrono::Utc;
 use tauri::{AppHandle, Emitter, Manager, Runtime};
 use tokio::sync::{Mutex, RwLock};
 
+pub use github_binding::GithubAccountAccess;
 use history::HistoryCache;
 use refresh_wake::RefreshWake;
 
@@ -78,6 +80,7 @@ pub struct AppState {
     history_cache: Mutex<HistoryCache>,
     notification_engine: Mutex<NotificationEngine>,
     pub login_statuses: Mutex<HashMap<String, LoginStatus>>,
+    github_pin_attempts: Mutex<HashMap<String, github_binding::PinAttempt>>,
 }
 
 impl AppState {
@@ -97,6 +100,7 @@ impl AppState {
             history_cache: Mutex::new(HistoryCache::default()),
             notification_engine: Mutex::new(NotificationEngine::default()),
             login_statuses: Mutex::new(HashMap::new()),
+            github_pin_attempts: Mutex::new(HashMap::new()),
         }
     }
 
@@ -890,6 +894,7 @@ fn merge_with_cache(
         .collect();
     if !retained.is_empty() {
         aggregate_issues.push(Issue {
+            kind: crate::models::IssueKind::Other,
             provider: connection.provider,
             connection_id: Some(connection.connection_id.clone()),
             message: format!(

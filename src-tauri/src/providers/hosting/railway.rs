@@ -93,6 +93,7 @@ pub async fn connection(cli: Option<&CliInvocation>, account: &Account) -> Conne
                     .is_none_or(|name| support::validate_text(name, 512).is_ok()) =>
         {
             Connection {
+                kind: None,
                 connection_id: account.id.clone(),
                 provider: Provider::Railway,
                 status: ConnectionStatus::Connected,

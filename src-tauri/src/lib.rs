@@ -4,6 +4,7 @@ mod commands;
 mod credential_store;
 mod credentials;
 mod desktop;
+mod github_cli_accounts;
 mod legacy_keyring;
 mod legacy_migration;
 mod login;
@@ -99,6 +100,8 @@ pub fn run() {
             commands::connect_cloudflare,
             commands::register_eas_project,
             commands::get_github_cli_accounts,
+            commands::get_github_cli_account_states,
+            commands::diagnose_github_connection,
             commands::connect_github_cli_account,
             commands::remove_connection,
             commands::begin_login,

@@ -150,6 +150,21 @@ export const settingsSchema = z.object({
   panel: panelSettingsSchema.prefault({}),
   preferences: preferencesSchema.prefault({}),
 });
+export const ISSUE_KINDS = [
+  "signedOut",
+  "missingCli",
+  "noAccess",
+  "rateLimited",
+  "network",
+  "timedOut",
+  "needsAccount",
+  "accountMismatch",
+  "unsupportedVersion",
+  "other",
+] as const;
+/** Unknown kinds from a newer backend fall back to "other" instead of failing. */
+export const issueKindSchema = z.enum(ISSUE_KINDS).catch("other");
+export type IssueKind = z.infer<typeof issueKindSchema>;
 export const connectionSchema = z.object({
   connectionId: z.string(),
   provider: providerSchema,
@@ -163,6 +178,7 @@ export const connectionSchema = z.object({
   account: optionalText,
   message: optionalText,
   cliVersion: optionalText,
+  kind: issueKindSchema.nullish(),
 });
 export const activitySchema = z.object({
   id: z.string(),
@@ -188,6 +204,7 @@ export const issueSchema = z.object({
   provider: providerSchema,
   message: z.string(),
   targetId: optionalText,
+  kind: issueKindSchema.default("other"),
 });
 export const targetHistorySchema = z.object({
   connectionId: z.string(),
@@ -241,6 +258,7 @@ export type Target = z.infer<typeof targetSchema>;
 export type Settings = z.infer<typeof settingsSchema>;
 export type Snapshot = z.infer<typeof snapshotSchema>;
 export type Connection = z.infer<typeof connectionSchema>;
+export type Issue = z.infer<typeof issueSchema>;
 export type Discovery = z.infer<typeof discoverySchema>;
 export type LoginStatus = z.infer<typeof loginSchema>;
 

@@ -279,6 +279,15 @@ impl NotificationEngine {
         self.pending_order.clear();
     }
 
+    /// Forgets baselines, observations and deliveries of the given targets. The
+    /// next observation starts a new silent baseline, so a changed account
+    /// identity cannot replay its existing runs as new notifications.
+    pub fn forget_targets(&mut self, target_keys: &[String]) {
+        for key in target_keys {
+            self.reset_target(key);
+        }
+    }
+
     fn reset_target(&mut self, preference_key: &str) {
         self.baselines
             .retain(|target, _| target.preference_key() != preference_key);

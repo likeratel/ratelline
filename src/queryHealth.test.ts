@@ -114,6 +114,7 @@ describe("target query health", () => {
           connectionId: "github:local",
           targetId: base.settings.targets[0].id,
           message: "Synthetic history lookup failure",
+          kind: "other" as const,
         },
       ],
     };

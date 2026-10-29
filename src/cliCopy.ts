@@ -1,34 +1,10 @@
 import type { Locale } from "./i18n";
 const messages = {
-  account: [
-    "GitHub CLI 계정",
-    "GitHub CLI account",
-    "GitHub CLI アカウント",
-    "GitHub CLI 账号",
-  ],
-  choose: [
-    "로그인한 계정 선택",
-    "Choose a signed-in account",
-    "ログイン済みアカウントを選択",
-    "选择已登录的账号",
-  ],
-  connect: [
-    "선택한 계정 연결",
-    "Connect selected account",
-    "選択したアカウントを接続",
-    "连接所选账号",
-  ],
   refresh: [
     "CLI 계정 새로고침",
     "Refresh CLI accounts",
     "CLI アカウントを更新",
     "刷新 CLI 账号",
-  ],
-  help: [
-    "gh에 로그인한 계정을 선택하세요. 계정을 추가하려면 터미널에서 gh auth login을 실행한 후 목록을 새로고침하세요.",
-    "Choose an account signed in to gh. To add one, run gh auth login in your terminal, then refresh this list.",
-    "gh にログイン済みのアカウントを選択してください。追加するには端末で gh auth login を実行し、一覧を更新してください。",
-    "请选择已登录 gh 的账号。要添加账号，请在终端运行 gh auth login，然后刷新列表。",
   ],
   preview: [
     "브라우저 미리보기에서는 가상 CLI 계정을 사용합니다.",

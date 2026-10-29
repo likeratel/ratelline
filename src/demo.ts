@@ -1,5 +1,12 @@
 import { preferencesSchema, panelSettingsSchema } from "./domain";
 import type { Account, Activity, Provider, Snapshot, Target } from "./domain";
+import type { GithubAccountAccess, GithubCliAccount } from "./cliAccounts";
+
+/** Fictional gh accounts used by the browser preview. */
+export const DEMO_GITHUB_ACCOUNTS: GithubCliAccount[] = [
+  { login: "orbit-developer", active: true, state: "ok" },
+  { login: "orbit-work", active: false, state: "ok" },
+];
 
 export const DEMO_ACCOUNTS: Account[] = [
   {
@@ -7,6 +14,7 @@ export const DEMO_ACCOUNTS: Account[] = [
     provider: "github",
     label: "GitHub CLI",
     mode: "local",
+    cliUsername: "orbit-developer",
   },
   {
     id: "vercel:local",
@@ -168,4 +176,94 @@ export function demoSnapshot(): Snapshot {
     pollIntervalSeconds: 30,
     lastUpdatedAt: ago(0),
   };
+}
+
+/**
+ * A preview state with one GitHub connection that has no gh account selected
+ * and a signed-out Vercel connection. Open the preview with `?demo=issues`.
+ */
+export function demoIssueSnapshot(): Snapshot {
+  const base = demoSnapshot();
+  const broken = new Set(["github:local", "vercel:local"]);
+  return {
+    ...base,
+    settings: {
+      ...base.settings,
+      accounts: base.settings.accounts.map((account) =>
+        account.id === "github:local"
+          ? { ...account, cliUsername: null }
+          : account,
+      ),
+    },
+    connections: base.connections.map((connection) =>
+      connection.connectionId === "github:local"
+        ? {
+            ...connection,
+            status: "error",
+            kind: "needsAccount",
+            message: "Choose which GitHub CLI account this connection uses.",
+          }
+        : connection.connectionId === "vercel:local"
+          ? {
+              ...connection,
+              status: "signed-out",
+              kind: "signedOut",
+              account: null,
+              message: "Sign in to Vercel to continue.",
+            }
+          : connection,
+    ),
+    issues: [
+      {
+        provider: "github",
+        connectionId: "github:local",
+        targetId: null,
+        kind: "needsAccount",
+        message: "Choose which GitHub CLI account this connection uses.",
+      },
+      {
+        provider: "vercel",
+        connectionId: "vercel:local",
+        targetId: null,
+        kind: "signedOut",
+        message: "Sign in to Vercel to continue.",
+      },
+    ],
+    queryHealth: base.queryHealth.map((health) =>
+      broken.has(health.connectionId)
+        ? { ...health, status: "error", lastSuccessfulAt: null }
+        : health,
+    ),
+  };
+}
+
+/** Preview diagnosis: orbit-developer can read every demo target, orbit-work none. */
+export function previewGithubAccess(
+  snapshot: Snapshot,
+  connectionId: string,
+): GithubAccountAccess[] {
+  const targets = snapshot.settings.targets
+    .filter((target) => target.connectionId === connectionId)
+    .map((target) => target.id);
+  const provider = snapshot.settings.accounts.find(
+    (item) => item.id === connectionId,
+  )?.provider;
+  return DEMO_GITHUB_ACCOUNTS.map((account) => {
+    const inaccessibleTargets =
+      account.login === "orbit-developer" ? [] : targets;
+    const usedBy = snapshot.settings.accounts.find(
+      (item) =>
+        item.id !== connectionId &&
+        item.provider === provider &&
+        item.cliUsername === account.login,
+    );
+    return {
+      ...account,
+      canAccessAll: inaccessibleTargets.length === 0,
+      inaccessibleTargets,
+      checkFailed: null,
+      identityMismatch: false,
+      usedByConnectionId: usedBy?.id ?? null,
+    };
+  });
 }

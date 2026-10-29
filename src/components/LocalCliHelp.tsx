@@ -26,16 +26,18 @@ const guides: Partial<Record<Provider, string>> = {
 export function LocalCliHelp({
   provider,
   version,
+  open = false,
 }: {
   provider: Provider;
   version?: string | null;
+  open?: boolean;
 }) {
   const { locale } = useI18n();
   const [error, setError] = useState<string | null>(null);
   const guide = guides[provider];
   if (!guide) return null;
   return (
-    <details className="connection-help">
+    <details className="connection-help" open={open}>
       <summary>{authCopy(locale, "installation")}</summary>
       <p>{authCopy(locale, "localHelp")}</p>
       <code>{getPlatformDetails(provider, locale).cliCommand}</code>

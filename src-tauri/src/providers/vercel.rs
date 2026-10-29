@@ -8,7 +8,7 @@ use crate::{
     cli::{CliError, CliInvocation},
     models::{
         Activity, ActivityPage, ActivityStatus, Connection, ConnectionStatus, Discovery, Issue,
-        Ownership, Provider, Target,
+        IssueKind, Ownership, Provider, Target,
     },
 };
 
@@ -124,6 +124,7 @@ pub async fn discover(cli: Option<&CliInvocation>, connection_id: &str) -> Disco
     let mut issues = Vec::new();
     if teams_truncated {
         issues.push(Issue {
+            kind: IssueKind::Other,
             provider: Provider::Vercel,
             connection_id: Some(connection_id.into()),
             message: format!(
@@ -142,6 +143,7 @@ pub async fn discover(cli: Option<&CliInvocation>, connection_id: &str) -> Disco
                 );
                 if truncated {
                     issues.push(Issue {
+            kind: IssueKind::Other,
                         provider: Provider::Vercel,
                         connection_id: Some(connection_id.into()),
                         message: format!(
@@ -152,6 +154,7 @@ pub async fn discover(cli: Option<&CliInvocation>, connection_id: &str) -> Disco
                 }
             }
             Err(error) => issues.push(Issue {
+                kind: error.issue_kind(),
                 provider: Provider::Vercel,
                 connection_id: Some(connection_id.into()),
                 message: error.user_message("Vercel"),
@@ -175,6 +178,7 @@ pub async fn connection(cli: Option<&CliInvocation>, connection_id: &str) -> Con
     let api = super::api::ApiClient::vercel(cli);
     match current_user(&api).await {
         Ok(user) if identity_matches(&api, &user.id) => Connection {
+            kind: None,
             connection_id: connection_id.into(),
             provider: Provider::Vercel,
             status: ConnectionStatus::Connected,
@@ -285,6 +289,7 @@ fn failed_discovery(error: CliError, version: Option<String>, connection_id: &st
     };
     Discovery {
         connection: Connection {
+            kind: Some(error.issue_kind()),
             connection_id: connection_id.into(),
             provider: Provider::Vercel,
             status,
@@ -347,28 +352,44 @@ pub async fn active(
     )
     .await;
     let mut deployments = Vec::new();
-    let mut issues = Vec::new();
+    let mut truncated_states = Vec::new();
+    let mut failures = Vec::new();
     for (state, (mut state_deployments, truncated, error)) in ACTIVE_STATES.into_iter().zip(results)
     {
         deployments.append(&mut state_deployments);
         if truncated {
-            issues.push(target_issue(
-                target,
-                format!(
-                    "Vercel active {state} deployments reached the {MAX_ACTIVE_DEPLOYMENT_PAGES}-page safety limit. Active results are partial."
-                ),
-            ));
+            truncated_states.push(state);
         }
         if let Some(error) = error {
-            issues.push(target_issue(
-                target,
-                format!(
-                    "Vercel active {state} probe failed: {}",
-                    error.user_message("Vercel")
-                ),
-            ));
+            failures.push((state, error));
         }
     }
+    let mut issues = Vec::new();
+    if !truncated_states.is_empty() {
+        issues.push(target_issue(
+            target,
+            format!(
+                "Vercel active deployments ({}) reached the {MAX_ACTIVE_DEPLOYMENT_PAGES}-page safety limit. Active results are partial.",
+                truncated_states.join(", ")
+            ),
+            IssueKind::Other,
+        ));
+    }
+    issues.extend(
+        super::grouped_probe_failures(&failures)
+            .into_iter()
+            .map(|(error, states)| {
+                target_issue(
+                    target,
+                    format!(
+                        "Vercel could not read active deployments ({}): {}",
+                        states.join(", "),
+                        error.user_message("Vercel")
+                    ),
+                    error.issue_kind(),
+                )
+            }),
+    );
     let verified_identity = VerifiedIdentity {
         uid: None,
         username: identity,
@@ -479,8 +500,9 @@ fn validate_vercel_target(target: &Target) -> Result<(&str, Option<&str>), CliEr
     Ok((project_id, Some(scope)))
 }
 
-fn target_issue(target: &Target, message: String) -> Issue {
+fn target_issue(target: &Target, message: String, kind: IssueKind) -> Issue {
     Issue {
+        kind,
         provider: Provider::Vercel,
         connection_id: Some(target.connection_id.clone()),
         message,
@@ -501,6 +523,7 @@ pub async fn collect(
         return (
             Vec::new(),
             vec![Issue {
+                kind: IssueKind::MissingCli,
                 provider: Provider::Vercel,
                 connection_id: Some(connection_id.into()),
                 message: "Vercel CLI is unavailable. Cached activity is shown when available."
@@ -516,6 +539,7 @@ pub async fn collect(
             return (
                 Vec::new(),
                 vec![Issue {
+                    kind: error.issue_kind(),
                     provider: Provider::Vercel,
                     connection_id: Some(connection_id.into()),
                     message: error.user_message("Vercel"),
@@ -537,6 +561,7 @@ pub async fn collect(
                 activities.append(&mut target_activities);
                 if truncated {
                     issues.push(Issue {
+            kind: IssueKind::Other,
                         provider: Provider::Vercel,
                         connection_id: Some(connection_id.into()),
                         message: format!(
@@ -548,6 +573,7 @@ pub async fn collect(
                 }
             }
             Err(error) => issues.push(Issue {
+                kind: error.issue_kind(),
                 provider: Provider::Vercel,
                 connection_id: Some(connection_id.into()),
                 message: error.user_message("Vercel"),

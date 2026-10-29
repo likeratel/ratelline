@@ -143,6 +143,7 @@ pub(super) async fn connection(account: &Account) -> Connection {
     match api_for_account(account).await {
         Ok(api) => match api.verify(account.provider).await {
             Ok(()) => Connection {
+                kind: None,
                 connection_id: account.id.clone(),
                 provider: account.provider,
                 status: ConnectionStatus::Connected,

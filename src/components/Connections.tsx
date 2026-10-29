@@ -7,7 +7,6 @@ import {
   type Account,
   type Discovery,
   type Connection,
-  type LoginStatus,
   type Provider,
   type Snapshot,
 } from "../domain";
@@ -16,12 +15,19 @@ import { expansionCopy } from "../providerExpansionCopy";
 import { ServiceSelector } from "./ServiceSelector";
 import { AccountPicker } from "./AccountPicker";
 import { getPlatformDetails } from "../platformDetails";
-import { accountDisplayName } from "../accountNames";
 import { useI18n } from "../i18n";
-import { settingsCopy } from "../settingsCopy";
 import { isGithubProvider } from "../cliAccounts";
-import { GithubCliConnect } from "./GithubCliConnect";
-import { LocalCliHelp } from "./LocalCliHelp";
+import {
+  GithubAccountChangeButton,
+  GithubAccountList,
+} from "./GithubAccountList";
+import { ConnectionAuthentication } from "./ConnectionAuthentication";
+import { ConnectionStateSummary } from "./ConnectionStateSummary";
+import { LoginNotice } from "./LoginNotice";
+import { ConnectionFixes } from "./ConnectionFixes";
+import type { ConnectionFix } from "../connectionFixes";
+import { useCliLogins } from "../useCliLogins";
+import { connectionFixCopy } from "../connectionFixCopy";
 import { ProjectSelection } from "./ProjectSelection";
 import { useSettingsChanges } from "../settingsChangesContext";
 import {
@@ -99,10 +105,11 @@ export function Connections({
   const [pendingConnection, setPendingConnection] = useState<Account | null>(
     null,
   );
-  const [logins, setLogins] = useState<Partial<Record<string, LoginStatus>>>(
-    {},
+  const { login, begin, forget } = useCliLogins(connectionId, setError);
+  const [fixAnnouncement, setFixAnnouncement] = useState("");
+  const [githubAccountsOpen, setGithubAccountsOpen] = useState<string | false>(
+    false,
   );
-  const login = logins[connectionId];
   const details = getPlatformDetails(provider, locale);
   const isTokenProvider = [
     "bitbucket",
@@ -110,34 +117,6 @@ export function Connections({
     "cloudflare-workers",
   ].includes(provider);
   const reload = onReload ?? onRefresh;
-  useEffect(() => {
-    if (login?.state !== "waiting") return;
-    let active = true;
-    let pending = false;
-    const timer = window.setInterval(() => {
-      if (pending) return;
-      pending = true;
-      void bridge
-        .loginStatus(login.provider, login.connectionId)
-        .then((value) => {
-          if (active)
-            setLogins((previous) => ({
-              ...previous,
-              [value.connectionId]: value,
-            }));
-        })
-        .catch((cause: unknown) => {
-          if (active) setError(errorMessage(cause));
-        })
-        .finally(() => {
-          pending = false;
-        });
-    }, 2000);
-    return () => {
-      active = false;
-      window.clearInterval(timer);
-    };
-  }, [login?.state, login?.provider, login?.connectionId]);
   const accounts = snapshot.settings.accounts.filter(
     (account) => account.provider === provider,
   );
@@ -306,11 +285,7 @@ export function Connections({
     setError(null);
     try {
       const saved = await bridge.removeConnection(connectionId);
-      setLogins((previous) =>
-        Object.fromEntries(
-          Object.entries(previous).filter(([id]) => id !== connectionId),
-        ),
-      );
+      forget(connectionId);
       setResults((previous) =>
         Object.fromEntries(
           Object.entries(previous).filter(([id]) => id !== connectionId),
@@ -357,22 +332,40 @@ export function Connections({
       setBusy(false);
     }
   };
-  const beginLogin = async () => {
+  const beginLogin = async (
+    loginProvider: Provider = provider,
+    loginConnectionId: string = connectionId,
+  ) => {
     setBusy(true);
     setError(null);
     try {
-      const status = await bridge.login(
-        provider,
-        connectionId,
-        provider === "aws" ? (account?.profile ?? null) : null,
-      );
-      setLogins((previous) => ({ ...previous, [connectionId]: status }));
+      const profile =
+        loginProvider === "aws"
+          ? (snapshot.settings.accounts.find(
+              (item) => item.id === loginConnectionId,
+            )?.profile ?? null)
+          : null;
+      await begin(loginProvider, loginConnectionId, profile);
     } catch (cause) {
       setError(errorMessage(cause));
     } finally {
       setBusy(false);
     }
   };
+  const showConnection = (fix: ConnectionFix) => {
+    setProvider(fix.provider);
+    setConnectionId(fix.connectionId);
+    setError(null);
+  };
+  const focusAccountControls = () =>
+    window.requestAnimationFrame(() =>
+      document
+        .getElementById("connection-account-controls")
+        ?.querySelector<HTMLElement>(
+          "button:not(:disabled), select:not(:disabled), input:not(:disabled)",
+        )
+        ?.focus(),
+    );
   const result = results[connectionId];
   const snapshotConnection = snapshot.connections.find(
     (item) => item.connectionId === connectionId,
@@ -384,6 +377,14 @@ export function Connections({
     : (result?.connection ?? snapshotConnection);
   const discoveryError = discoveryErrors[connectionId];
   const connected = connection?.status === "connected";
+  // Bound, working GitHub connections keep the account list one click away.
+  const showGithubAccounts =
+    !account?.cliUsername ||
+    githubAccountsOpen === connectionId ||
+    (!connected &&
+      ["needsAccount", "noAccess", "accountMismatch"].includes(
+        connection?.kind ?? "",
+      ));
   const statusLabel = discoveryError
     ? uxCopy(locale, "verificationFailed")
     : copy(
@@ -455,6 +456,15 @@ export function Connections({
       void onRefresh().catch((cause: unknown) => setError(errorMessage(cause)));
       return;
     }
+    if (action === "githubAccount") {
+      const list = document.getElementById("github-account-list");
+      (
+        list?.querySelector<HTMLElement>(
+          ".github-account-row button:not(:disabled)",
+        ) ?? list
+      )?.focus();
+      return;
+    }
     const sectionId =
       action === "projects"
         ? "connection-project-controls"
@@ -501,6 +511,41 @@ export function Connections({
         tabIndex={0}
         aria-label={t("connections.content")}
       >
+        <ConnectionFixes
+          snapshot={snapshot}
+          busy={working}
+          focusConnectionId={requestedConnectionId}
+          focusRequest={connectionRequest}
+          onReload={reload}
+          onRefresh={onRefresh}
+          onSignIn={(fix) => {
+            showConnection(fix);
+            void beginLogin(fix.provider, fix.connectionId);
+          }}
+          onOpenConnection={(fix) => {
+            showConnection(fix);
+            focusAccountControls();
+          }}
+          onFixed={(fix, login) => {
+            showConnection(fix);
+            setGithubAccountsOpen(false);
+            setFixAnnouncement(
+              connectionFixCopy(locale, "switched", { login }),
+            );
+            // The fixed card disappears; continue at the connection's account.
+            window.requestAnimationFrame(() =>
+              window.requestAnimationFrame(() =>
+                (
+                  document.getElementById("github-account-change") ??
+                  document.getElementById("connection-provider-panel")
+                )?.focus(),
+              ),
+            );
+          }}
+        />
+        <p className="sr-only" role="status" aria-live="polite">
+          {fixAnnouncement}
+        </p>
         {!connected && (
           <p className="section-intro">{uxCopy(locale, "connectionIntro")}</p>
         )}
@@ -563,6 +608,22 @@ export function Connections({
                 }
               />
             )}
+            {isGithubProvider(provider) && account && showGithubAccounts && (
+              <GithubAccountList
+                key={connectionId}
+                provider={provider}
+                connectionId={connectionId}
+                username={account.cliUsername}
+                targetCount={selectedTargets.length}
+                busy={busy || saving}
+                onBusyChange={setCliBusy}
+                onConnected={async () => {
+                  setGithubAccountsOpen(false);
+                  await reload();
+                  await discoverConnection(provider, connectionId, null);
+                }}
+              />
+            )}
           </div>
           {details.unsupportedMessage && (
             <div className="connection-actions">
@@ -593,36 +654,13 @@ export function Connections({
           {!details.unsupportedMessage && (!isTokenProvider || account) && (
             <>
               <div className="connection-overview">
-                <div className="connection-state" role="status">
-                  <span
-                    aria-hidden="true"
-                    className={`connection-dot ${connected && !discoveryError ? "connected" : ""}`}
-                  />
-                  <div>
-                    <strong>
-                      <span className="connection-status-label">
-                        {statusLabel} ·{" "}
-                      </span>
-                      {account
-                        ? accountDisplayName(
-                            account,
-                            snapshot.settings,
-                            connection ? [connection] : [],
-                          )
-                        : t("connections.checkConnection")}
-                    </strong>
-                    {connection?.account &&
-                      account &&
-                      connection.account !==
-                        accountDisplayName(
-                          account,
-                          snapshot.settings,
-                          connection ? [connection] : [],
-                        ) && <p>{connection.account}</p>}
-                    {connection?.status !== "connected" &&
-                      connection?.message && <p>{connection.message}</p>}
-                  </div>
-                </div>
+                <ConnectionStateSummary
+                  account={account}
+                  connection={connection}
+                  settings={snapshot.settings}
+                  statusLabel={statusLabel}
+                  healthy={connected && !discoveryError}
+                />
                 <div className="connection-actions">
                   <button
                     id="connection-verify-control"
@@ -637,6 +675,15 @@ export function Connections({
                     )}
                     {t("connections.verifyTargets")}
                   </button>
+                  {isGithubProvider(provider) &&
+                    account?.cliUsername &&
+                    !showGithubAccounts && (
+                      <GithubAccountChangeButton
+                        login={account.cliUsername}
+                        disabled={working}
+                        onOpen={() => setGithubAccountsOpen(connectionId)}
+                      />
+                    )}
                   {details.canStartAppLogin && (
                     <button
                       className="button"
@@ -692,58 +739,12 @@ export function Connections({
                 />
               </div>
               {!isTokenProvider && (
-                <details
-                  id="connection-authentication"
-                  className="authentication-details"
+                <ConnectionAuthentication
                   key={`auth-${connectionId}`}
-                  open={connection?.status !== "connected"}
-                >
-                  <summary>{uxCopy(locale, "authentication")}</summary>
-                  {isGithubProvider(provider) && account && (
-                    <GithubCliConnect
-                      key={connectionId}
-                      provider={provider}
-                      connectionId={connectionId}
-                      username={account.cliUsername}
-                      busy={busy || saving}
-                      onBusyChange={setCliBusy}
-                      onConnected={async () => {
-                        await reload();
-                        await discoverConnection(provider, connectionId, null);
-                      }}
-                    />
-                  )}
-                  {!isGithubProvider(provider) && (
-                    <details className="connection-help">
-                      <summary>
-                        {settingsCopy(locale, "connectionHelp")}
-                      </summary>
-                      <p>
-                        {provider === "aws"
-                          ? account
-                            ? t("connections.awsSelected", {
-                                profile: account.profile ?? account.label,
-                                command: "aws sso login --profile <profile>",
-                              })
-                            : t("connections.awsAdd")
-                          : account?.mode === "isolated"
-                            ? t("connections.appLogin", {
-                                provider: PROVIDER_NAMES[provider],
-                              })
-                            : details.cliCommand
-                              ? t("connections.completeCli", {
-                                  command: details.cliCommand,
-                                })
-                              : details.connectionSummary}
-                      </p>
-                    </details>
-                  )}
-                  <LocalCliHelp
-                    key={provider}
-                    provider={provider}
-                    version={connection?.cliVersion}
-                  />
-                </details>
+                  provider={provider}
+                  account={account}
+                  connection={connection}
+                />
               )}
               {provider === "aws" && account && (
                 <div className="aws-fields">
@@ -762,37 +763,11 @@ export function Connections({
                 </div>
               )}
               {login?.connectionId === connectionId && (
-                <div
-                  className={`notice ${login.state === "error" ? "warning" : ""}`}
-                  role="status"
-                >
-                  <span>{login.message}</span>
-                  {login.code && (
-                    <code className="device-code">{login.code}</code>
-                  )}
-                  {login.url && (
-                    <button
-                      className="text-button"
-                      onClick={() =>
-                        void bridge
-                          .open(login.url!)
-                          .catch((cause: unknown) =>
-                            setError(errorMessage(cause)),
-                          )
-                      }
-                    >
-                      {t("connections.openAuth")} <ArrowUpRight size={13} />
-                    </button>
-                  )}
-                  {login.state === "complete" && (
-                    <button
-                      className="text-button"
-                      onClick={() => void discover()}
-                    >
-                      {t("connections.loadTargets")}
-                    </button>
-                  )}
-                </div>
+                <LoginNotice
+                  login={login}
+                  onError={setError}
+                  onLoadTargets={() => void discover()}
+                />
               )}
               {result?.issues.map((issue, index) => (
                 <div

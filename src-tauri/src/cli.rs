@@ -15,7 +15,7 @@ use tokio::{
     time::timeout,
 };
 
-use crate::models::{Account, AccountMode, Provider};
+use crate::models::{Account, AccountMode, IssueKind, Provider};
 
 const GITHUB_KEYRING_NAMESPACE: &str = "RATELLINE_GH_KEYRING_NAMESPACE";
 
@@ -39,6 +39,8 @@ pub struct CliInvocation {
     github_token_cache: std::sync::Arc<tokio::sync::OnceCell<String>>,
     compatibility_error: Option<CliError>,
     github_username: Option<String>,
+    /// GitHub connections never fall back to the globally active gh account.
+    github_account_required: bool,
     vercel_global_config: Option<PathBuf>,
     expected_identity: Option<String>,
 }
@@ -77,6 +79,7 @@ impl CliInvocation {
             github_token_cache: std::sync::Arc::new(tokio::sync::OnceCell::new()),
             compatibility_error: None,
             github_username: None,
+            github_account_required: false,
             vercel_global_config: None,
             expected_identity: None,
         }
@@ -158,6 +161,9 @@ impl CliInvocation {
     }
 
     async fn github_json_bytes(&self, endpoint: &str) -> Result<Vec<u8>, CliError> {
+        if self.github_account_required && self.github_username.is_none() {
+            return Err(CliError::NeedsAccount);
+        }
         let _permit = self.acquire_process().await?;
         let token = match self.github_username.as_deref() {
             Some(username) => Some(self.github_token(username).await?),
@@ -299,6 +305,32 @@ impl CliInvocation {
         args: &[&str],
         duration: Duration,
     ) -> Result<(Vec<u8>, Vec<u8>), CliError> {
+        let (success, stdout, stderr) = self.capture_ungated(args, duration).await?;
+        if !success {
+            return Err(classify_failure(&stderr));
+        }
+        Ok((stdout, stderr))
+    }
+
+    /// Runs a command and returns both streams even when it exits unsuccessfully.
+    /// Callers must parse the streams locally and never return them to the UI.
+    pub(crate) async fn capture(
+        &self,
+        args: &[&str],
+        duration: Duration,
+    ) -> Result<(bool, Vec<u8>, Vec<u8>), CliError> {
+        if let Some(error) = self.compatibility_error {
+            return Err(error);
+        }
+        let _permit = self.acquire_process().await?;
+        self.capture_ungated(args, duration).await
+    }
+
+    async fn capture_ungated(
+        &self,
+        args: &[&str],
+        duration: Duration,
+    ) -> Result<(bool, Vec<u8>, Vec<u8>), CliError> {
         let mut command = Command::new(&self.program);
         command
             .args(&self.prefix_args)
@@ -337,11 +369,7 @@ impl CliInvocation {
         })
         .await
         .map_err(|_| CliError::TimedOut)??;
-
-        if !output.0 {
-            return Err(classify_failure(&output.2));
-        }
-        Ok((output.1, output.2))
+        Ok(output)
     }
 
     pub fn login_command(&self, args: &[&str]) -> Command {
@@ -424,7 +452,7 @@ fn is_safe_selector(value: &str, max_len: usize) -> bool {
             .all(|character| character.is_ascii_alphanumeric() || matches!(character, '_' | '-'))
 }
 
-fn is_safe_github_username(value: &str) -> bool {
+pub(crate) fn is_safe_github_username(value: &str) -> bool {
     !value.is_empty()
         && value.len() <= 39
         && value
@@ -448,7 +476,7 @@ async fn read_limited<R: tokio::io::AsyncRead + Unpin>(reader: R) -> Result<Vec<
     Ok(bytes)
 }
 
-fn classify_failure(stderr: &[u8]) -> CliError {
+pub(crate) fn classify_failure(stderr: &[u8]) -> CliError {
     let text = String::from_utf8_lossy(stderr).to_ascii_lowercase();
     if [
         "not logged",
@@ -458,6 +486,8 @@ fn classify_failure(stderr: &[u8]) -> CliError {
         "no existing credentials found",
         "log in",
         "login required",
+        "bad credentials",
+        "http 401",
     ]
     .iter()
     .any(|needle| text.contains(needle))
@@ -480,10 +510,59 @@ fn classify_failure(stderr: &[u8]) -> CliError {
     .any(|needle| text.contains(needle))
     {
         CliError::UnsupportedVersion
+    } else if NETWORK_FAILURES.iter().any(|needle| text.contains(needle)) {
+        CliError::Network
+    } else if NO_ACCESS_FAILURES
+        .iter()
+        .any(|needle| text.contains(needle))
+    {
+        CliError::NoAccess
     } else {
         CliError::Failed
     }
 }
+
+const NETWORK_FAILURES: &[&str] = &[
+    "could not resolve host",
+    "dial tcp",
+    "connection refused",
+    "connection reset",
+    "network is unreachable",
+    "tls handshake",
+    "no such host",
+    "i/o timeout",
+    "getaddrinfo",
+    "econnrefused",
+    "econnreset",
+    "etimedout",
+    "enetunreach",
+    "socket hang up",
+];
+
+/// GitHub reports `gh: Not Found (HTTP 404)`; the Vercel CLI error format is not
+/// verified, so only explicit HTTP status wording and API error codes match.
+const NO_ACCESS_FAILURES: &[&str] = &[
+    "http 404",
+    "http 403",
+    "(404)",
+    "(403)",
+    "status 404",
+    "status 403",
+    "status: 404",
+    "status: 403",
+    "\"status\":\"404\"",
+    "\"status\":\"403\"",
+    "\"status\":404",
+    "\"status\":403",
+    "404 not found",
+    "403 forbidden",
+    "not found",
+    "not_found",
+    "forbidden",
+    "resource not accessible",
+    "don't have permission",
+    "do not have permission",
+];
 
 #[derive(Clone, Copy, Debug, Eq, PartialEq)]
 pub enum CliError {
@@ -496,6 +575,9 @@ pub enum CliError {
     TimedOut,
     OutputTooLarge,
     InvalidOutput,
+    NoAccess,
+    Network,
+    NeedsAccount,
     Failed,
 }
 
@@ -521,10 +603,40 @@ impl CliError {
                 format!("{provider} returned more data than ratelline can safely process.")
             }
             Self::InvalidOutput => format!("{provider} returned an unsupported response."),
+            Self::NoAccess => format!(
+                "{provider} could not access this resource with the selected account. Choose an account that can access it."
+            ),
+            Self::Network => format!(
+                "{provider} could not be reached. Check the network connection. Cached data is shown."
+            ),
+            Self::NeedsAccount => {
+                format!("Choose which {provider} CLI account this connection uses.")
+            }
             Self::Failed => {
                 format!("{provider} request failed. Check account authorization and the network connection.")
             }
         }
+    }
+
+    pub fn issue_kind(self) -> IssueKind {
+        match self {
+            Self::Unavailable => IssueKind::MissingCli,
+            Self::UnsupportedVersion => IssueKind::UnsupportedVersion,
+            Self::SignedOut => IssueKind::SignedOut,
+            Self::AccountMismatch => IssueKind::AccountMismatch,
+            Self::RateLimited => IssueKind::RateLimited,
+            Self::TimedOut => IssueKind::TimedOut,
+            Self::NoAccess => IssueKind::NoAccess,
+            Self::Network => IssueKind::Network,
+            Self::NeedsAccount => IssueKind::NeedsAccount,
+            Self::Busy | Self::OutputTooLarge | Self::InvalidOutput | Self::Failed => {
+                IssueKind::Other
+            }
+        }
+    }
+
+    pub fn query_error(self, provider: &str) -> crate::models::QueryError {
+        crate::models::QueryError::new(self.issue_kind(), self.user_message(provider))
     }
 }
 
@@ -661,10 +773,10 @@ impl Toolchain {
             account.provider,
             Provider::Github | Provider::GithubDeployments
         ) {
+            // A connection without a selected gh user reports NeedsAccount on its
+            // first API call instead of reading through whichever account is active.
             invocation.github_username = account.cli_username.clone();
-            if account.mode == AccountMode::Isolated && invocation.github_username.is_none() {
-                return Err("Reconnect this GitHub account to select its CLI identity.".into());
-            }
+            invocation.github_account_required = true;
         }
         if account.provider == Provider::Vercel && account.mode == AccountMode::Isolated {
             let directory = self.account_config_root.join(&account.id);
@@ -677,30 +789,27 @@ impl Toolchain {
     }
 
     pub async fn github_accounts(&self) -> Result<Vec<String>, CliError> {
+        let mut logins: Vec<String> = self
+            .github_account_states()
+            .await?
+            .into_iter()
+            .map(|account| account.login)
+            .collect();
+        logins.sort();
+        logins.dedup();
+        Ok(logins)
+    }
+
+    /// Lists gh accounts signed in to github.com without switching the active one.
+    pub async fn github_account_states(
+        &self,
+    ) -> Result<Vec<crate::github_cli_accounts::GithubCliAccount>, CliError> {
         let mut cli = self.github.clone().ok_or(CliError::Unavailable)?;
         cli.removed_environment = provider_environment(Provider::Github)
             .iter()
             .map(OsString::from)
             .collect();
-        let accounts: Vec<String> = cli
-            .json(&[
-                "auth",
-                "status",
-                "--hostname",
-                "github.com",
-                "--json",
-                "hosts",
-                "--jq",
-                ".hosts[\"github.com\"] | map(.login) | unique",
-            ])
-            .await?;
-        if accounts
-            .iter()
-            .any(|account| !is_safe_github_username(account))
-        {
-            return Err(CliError::InvalidOutput);
-        }
-        Ok(accounts)
+        crate::github_cli_accounts::list(&cli).await
     }
 
     pub fn prepare_account(&self, account: &Account) -> Result<(), String> {
@@ -936,6 +1045,115 @@ mod tests {
         let error = classify_failure(b"token abc-secret is invalid; authentication required");
         assert_eq!(error, CliError::SignedOut);
         assert!(!error.user_message("GitHub").contains("abc-secret"));
+    }
+
+    #[test]
+    fn access_network_and_rate_limit_failures_are_classified_in_order() {
+        let cases: &[(&[u8], CliError)] = &[
+            (
+                br#"{"message":"Not Found","status":"404"}gh: Not Found (HTTP 404)"#,
+                CliError::NoAccess,
+            ),
+            (
+                b"gh: Resource not accessible by integration (HTTP 403)",
+                CliError::NoAccess,
+            ),
+            (
+                b"gh: API rate limit exceeded for user ID 1. (HTTP 403)",
+                CliError::RateLimited,
+            ),
+            (
+                b"Post \"https://api.github.com/graphql\": dial tcp: lookup api.github.com: no such host",
+                CliError::Network,
+            ),
+            (b"error connecting to api.github.com\nCould not resolve host", CliError::Network),
+            (b"TLS handshake timeout", CliError::Network),
+            (b"read tcp: i/o timeout", CliError::Network),
+            (b"Error: getaddrinfo ENOTFOUND api.vercel.com", CliError::Network),
+            (b"Error: Project not found (404)", CliError::NoAccess),
+            (b"Error: forbidden", CliError::NoAccess),
+            (br#"{"error":{"code":"not_found"}}"#, CliError::NoAccess),
+            (b"gh: Bad credentials (HTTP 401)", CliError::SignedOut),
+            (b"took 404ms to finish", CliError::Failed),
+        ];
+        for (stderr, expected) in cases {
+            assert_eq!(
+                classify_failure(stderr),
+                *expected,
+                "{}",
+                String::from_utf8_lossy(stderr)
+            );
+        }
+        for error in [
+            CliError::NoAccess,
+            CliError::Network,
+            CliError::NeedsAccount,
+        ] {
+            assert!(!error.user_message("GitHub").contains("HTTP"));
+        }
+        assert_eq!(CliError::NoAccess.issue_kind(), IssueKind::NoAccess);
+        assert_eq!(CliError::Network.issue_kind(), IssueKind::Network);
+        assert_eq!(CliError::NeedsAccount.issue_kind(), IssueKind::NeedsAccount);
+        assert_eq!(CliError::Failed.issue_kind(), IssueKind::Other);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn github_connection_without_selected_user_never_calls_the_active_account() {
+        use std::os::unix::fs::PermissionsExt;
+        let root = tempfile::tempdir().unwrap();
+        let script = root.path().join("gh");
+        std::fs::write(
+            &script,
+            "#!/bin/sh\nprintf '%s\\n' \"$*\" >> \"$0.log\"\nprintf '{\"id\":1,\"login\":\"orbit-developer\"}'\n",
+        )
+        .unwrap();
+        std::fs::set_permissions(&script, std::fs::Permissions::from_mode(0o700)).unwrap();
+        let tools =
+            Toolchain::github_for_test(root.path(), CliInvocation::for_test(script.clone()));
+        let mut settings = crate::models::Settings::default();
+        settings.migrate_legacy();
+        settings.validate().expect("default settings stay valid");
+        let local = settings
+            .accounts
+            .iter()
+            .find(|account| account.id == crate::models::LOCAL_GITHUB_ID)
+            .unwrap()
+            .clone();
+        assert_eq!(local.mode, AccountMode::Local);
+        let cli = tools.invocation_for(&local).unwrap().unwrap();
+        assert_eq!(
+            cli.github_json::<serde_json::Value>("user")
+                .await
+                .unwrap_err(),
+            CliError::NeedsAccount
+        );
+        let isolated = Account {
+            id: "github-00000000-0000-0000-0000-000000000000".into(),
+            mode: AccountMode::Isolated,
+            profile: Some("1".into()),
+            ..local.clone()
+        };
+        let cli = tools.invocation_for(&isolated).unwrap().unwrap();
+        assert_eq!(
+            cli.github_json::<serde_json::Value>("repos/sample/app")
+                .await
+                .unwrap_err(),
+            CliError::NeedsAccount
+        );
+        assert!(!script.with_extension("log").exists(), "no gh call may run");
+
+        let bound = Account {
+            cli_username: Some("orbit-developer".into()),
+            ..local
+        };
+        bound
+            .validate()
+            .expect("the local GitHub slot may select a gh user");
+        let cli = tools.invocation_for(&bound).unwrap().unwrap();
+        let _: serde_json::Value = cli.github_json("user").await.unwrap();
+        let log = std::fs::read_to_string(script.with_extension("log")).unwrap();
+        assert!(log.contains("auth token --hostname github.com --user orbit-developer"));
     }
 
     #[test]

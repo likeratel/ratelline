@@ -17,8 +17,17 @@ import {
   type Snapshot,
   type TargetHistory,
 } from "./domain";
-import { DEMO_TARGETS, demoSnapshot } from "./demo";
 import {
+  DEMO_GITHUB_ACCOUNTS,
+  DEMO_TARGETS,
+  demoIssueSnapshot,
+  demoSnapshot,
+  previewGithubAccess,
+} from "./demo";
+import {
+  connectionIdSchema,
+  githubAccountAccessSchema,
+  githubCliAccountSchema,
   githubCliBindingSchema,
   githubUsernameSchema,
   type GithubProvider,
@@ -31,6 +40,11 @@ import {
 
 export const isPreview = !isTauri();
 let preview = demoSnapshot();
+if (
+  isPreview &&
+  new URLSearchParams(window.location.search).get("demo") === "issues"
+)
+  preview = demoIssueSnapshot();
 let language: LanguagePreference = "system";
 const rememberLanguage = <T>(value: T): T => {
   if (typeof value === "object" && value !== null) {
@@ -50,18 +64,35 @@ const call = async <T>(
 ): Promise<T> => rememberLanguage(schema.parse(await invoke(command, args)));
 export const bridge = {
   githubCliAccounts: async () => {
-    if (isPreview) return ["orbit-developer", "orbit-work"];
+    if (isPreview) return DEMO_GITHUB_ACCOUNTS.map((account) => account.login);
     return call("get_github_cli_accounts", z.array(githubUsernameSchema));
+  },
+  githubCliAccountStates: async () => {
+    if (isPreview)
+      return z.array(githubCliAccountSchema).parse(DEMO_GITHUB_ACCOUNTS);
+    return call(
+      "get_github_cli_account_states",
+      z.array(githubCliAccountSchema),
+    );
+  },
+  diagnoseGithubConnection: async (connectionId: string) => {
+    const input = { connectionId: connectionIdSchema.parse(connectionId) };
+    const schema = z.array(githubAccountAccessSchema);
+    if (isPreview)
+      return schema.parse(previewGithubAccess(preview, input.connectionId));
+    return call("diagnose_github_connection", schema, input);
   },
   connectGithubCliAccount: async (
     provider: GithubProvider,
     connectionId: string,
     username: string,
+    allowIdentityChange = false,
   ) => {
     const input = githubCliBindingSchema.parse({
       provider,
       connectionId,
       username,
+      allowIdentityChange,
     });
     if (!isPreview)
       return call("connect_github_cli_account", accountSchema, input);
@@ -78,6 +109,29 @@ export const bridge = {
           item.id === connectionId ? next : item,
         ),
       },
+      connections: preview.connections.map((item) =>
+        item.connectionId === connectionId
+          ? {
+              ...item,
+              status: "connected",
+              account: username,
+              kind: null,
+              message: null,
+            }
+          : item,
+      ),
+      issues: preview.issues.filter(
+        (item) => item.connectionId !== connectionId,
+      ),
+      queryHealth: preview.queryHealth.map((item) =>
+        item.connectionId === connectionId
+          ? {
+              ...item,
+              status: "success",
+              lastSuccessfulAt: new Date().toISOString(),
+            }
+          : item,
+      ),
     };
     return next;
   },

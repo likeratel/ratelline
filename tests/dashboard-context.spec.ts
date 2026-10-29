@@ -82,7 +82,7 @@ test("failed connections expose recovery immediately and sort the failing accoun
   await expect(health.locator(".service-health-row").first()).toContainText(
     "Vercel",
   );
-  const reconnect = health.getByRole("button", { name: "연결 설정 열기" });
+  const reconnect = health.getByRole("button", { name: "브라우저로 로그인" });
   await expect(reconnect).toBeVisible();
   await page.screenshot({
     path: "artifacts/ux-recovery-720.png",

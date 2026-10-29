@@ -31,6 +31,19 @@ test("CLI username and connection are explicit in the binding and response", asy
     provider: "github",
     connectionId: "github:local",
     username: "example-user",
+    allowIdentityChange: false,
+  });
+  await bridge.connectGithubCliAccount(
+    "github",
+    "github:local",
+    "example-user",
+    true,
+  );
+  expect(invoke).toHaveBeenLastCalledWith("connect_github_cli_account", {
+    provider: "github",
+    connectionId: "github:local",
+    username: "example-user",
+    allowIdentityChange: true,
   });
   invoke.mockResolvedValue(["valid-user", "invalid user"]);
   await expect(bridge.githubCliAccounts()).rejects.toThrow();

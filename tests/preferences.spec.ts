@@ -257,7 +257,7 @@ test("English settings tabs and recovery links open Connections from General", a
   await page.getByRole("button", { name: /^All services/ }).click();
   const health = page.locator(".service-health");
   await expect(health).toHaveAttribute("open", "");
-  await health.getByRole("button", { name: "Open connections" }).click();
+  await health.getByRole("button", { name: "Show how to sign in" }).click();
   await expect(
     panel(page, "Connections").locator(".connections-settings"),
   ).toBeVisible();
@@ -288,11 +288,16 @@ test("service diagnostics distinguish sign-in problems and include a recovery ac
   await expect(page.locator(".service-health")).toContainText("로그인 필요");
   await page
     .locator(".service-health")
-    .getByRole("button", { name: "연결 설정 열기" })
+    .getByRole("button", { name: "로그인 방법 보기" })
     .click();
   await expect(
     page.getByRole("tabpanel", { name: "서비스 연결" }),
   ).toBeVisible();
+  await expect(
+    page
+      .getByRole("region", { name: "고칠 것" })
+      .getByRole("button", { name: "로그인 방법 보기" }),
+  ).toBeFocused();
 });
 
 for (const language of [

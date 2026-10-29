@@ -171,6 +171,7 @@ async fn current_user(cli: &CliInvocation) -> Result<RenderUser, CliError> {
 
 fn connected(account: &Account, version: Option<String>, user: RenderUser) -> Connection {
     Connection {
+        kind: None,
         connection_id: account.id.clone(),
         provider: Provider::Render,
         status: ConnectionStatus::Connected,

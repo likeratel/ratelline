@@ -59,6 +59,7 @@ pub(super) fn unavailable_discovery(
         targets: Vec::new(),
         aws_profiles: Vec::new(),
         issues: vec![Issue {
+            kind: crate::models::IssueKind::Other,
             provider: account.provider,
             connection_id: Some(account.id.clone()),
             message: message.into(),
@@ -77,6 +78,7 @@ pub(super) fn unavailable_page(
         activities: Vec::new(),
         next_cursor: None,
         issues: vec![Issue {
+            kind: crate::models::IssueKind::Other,
             provider: target.provider,
             connection_id: Some(target.connection_id.clone()),
             message: message.into(),
@@ -101,6 +103,7 @@ pub(super) fn unavailable_connection(
     message: &'static str,
 ) -> Connection {
     Connection {
+        kind: None,
         connection_id: account.id.clone(),
         provider: account.provider,
         status: ConnectionStatus::Unconfigured,
@@ -122,6 +125,7 @@ pub(super) fn failed_connection(
         _ => ConnectionStatus::Error,
     };
     Connection {
+        kind: None,
         connection_id: account.id.clone(),
         provider: account.provider,
         status,
@@ -154,6 +158,7 @@ fn unsupported_discovery(account: &Account) -> Discovery {
         targets: Vec::new(),
         aws_profiles: Vec::new(),
         issues: vec![Issue {
+            kind: crate::models::IssueKind::Other,
             provider: account.provider,
             connection_id: Some(account.id.clone()),
             message: message.into(),

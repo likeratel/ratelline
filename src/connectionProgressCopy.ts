@@ -173,6 +173,18 @@ const text = {
     "管理账户",
   ],
   checkAccount: ["계정 확인", "Check account", "アカウントを確認", "验证账户"],
+  chooseGithubAccount: [
+    "계정 선택",
+    "Choose account",
+    "アカウントを選択",
+    "选择账号",
+  ],
+  githubAccountNeeded: [
+    "이 연결이 사용할 GitHub 계정을 골라야 합니다.",
+    "Choose the GitHub account this connection uses.",
+    "この接続で使う GitHub アカウントを選んでください。",
+    "请选择此连接使用的 GitHub 账号。",
+  ],
   selectProjects: [
     "프로젝트 선택",
     "Select projects",

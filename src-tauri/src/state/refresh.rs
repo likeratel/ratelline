@@ -1,7 +1,7 @@
 use super::{history::HistoryCache, *};
 use crate::{
     cli::CliInvocation,
-    models::{ActivityPage, QueryHealthStatus},
+    models::{ActivityPage, IssueKind, QueryError, QueryHealthStatus},
     providers::catalog,
 };
 use futures::{stream, StreamExt};
@@ -17,6 +17,7 @@ impl AppState {
             return self.snapshot().await;
         };
         let refresh_cycle = self.refresh_wake.begin(refresh_guard);
+        let mut github_pins_checked = false;
         loop {
             let (settings, revision, epoch) = {
                 let _publish = self.publish_lock.lock().await;
@@ -38,6 +39,16 @@ impl AppState {
                 self.emit(next, publisher).await;
                 (settings, revision, epoch)
             };
+            // Bind unbound GitHub connections once per call, after the snapshot
+            // shows the cycle as checking. A new binding changes the settings, so
+            // the cycle restarts with them.
+            if !github_pins_checked {
+                github_pins_checked = true;
+                self.auto_pin_github_connections(publisher).await;
+                if self.settings_revision.load(Ordering::SeqCst) != revision {
+                    continue;
+                }
+            }
             stream::iter(settings.accounts.clone())
                 .map(|account| {
                     let settings = &settings;
@@ -114,13 +125,17 @@ impl AppState {
                     ConnectionStatus::Error,
                     "Connection check timed out. Last known results may be stale.",
                 )
+                .with_kind(IssueKind::TimedOut)
             }),
+            // Invalid saved account data or a local preparation failure; neither is
+            // fixed by signing in or retrying, so it stays unclassified.
             Err(message) => Connection::disconnected(
                 &account.id,
                 account.provider,
                 ConnectionStatus::Error,
                 message,
-            ),
+            )
+            .with_kind(IssueKind::Other),
         };
         if !self
             .publish_connection(connection.clone(), &targets, revision, epoch, publisher)
@@ -227,6 +242,7 @@ impl AppState {
             current.pending_targets.clone()
         } else {
             issues.push(Issue {
+                kind: connection.kind.unwrap_or_default(),
                 provider: connection.provider,
                 connection_id: Some(connection.connection_id.clone()),
                 target_id: None,
@@ -265,7 +281,7 @@ impl AppState {
     async fn publish_page<P: SnapshotPublisher>(
         &self,
         target: &Target,
-        result: Result<ActivityPage, String>,
+        result: Result<ActivityPage, QueryError>,
         kind: PageKind,
         revision: u64,
         epoch: u64,
@@ -332,6 +348,7 @@ impl AppState {
                         || !issue.message.starts_with("Notification:")
                 });
                 updated.issues.push(Issue {
+                    kind: IssueKind::Other,
                     provider: target.provider,
                     connection_id: Some(target.connection_id.clone()),
                     target_id: Some(target.id.clone()),
@@ -444,9 +461,9 @@ impl AppState {
         .await
         {
             Ok(page) => page,
-            Err(message) => {
+            Err(error) => {
                 self.fail_history_load(&target, cursor, generation).await;
-                return Err(message);
+                return Err(error.message);
             }
         };
         let _publish = self.publish_lock.lock().await;
@@ -511,13 +528,18 @@ async fn bounded_page(
     cursor: Option<&str>,
     identity: Option<&str>,
     hours: u32,
-) -> Result<ActivityPage, String> {
+) -> Result<ActivityPage, QueryError> {
     tokio::time::timeout(
         REQUEST_TIMEOUT,
         catalog::page(cli, target, cursor, identity, hours),
     )
     .await
-    .map_err(|_| "Run history lookup timed out. Last known results may be stale.".to_owned())?
+    .map_err(|_| {
+        QueryError::new(
+            IssueKind::TimedOut,
+            "Run history lookup timed out. Last known results may be stale.",
+        )
+    })?
 }
 
 fn same_target(activity: &Activity, target: &Target) -> bool {
@@ -530,7 +552,7 @@ fn same_target(activity: &Activity, target: &Target) -> bool {
 fn apply_page(
     current: Snapshot,
     target: &Target,
-    result: Result<ActivityPage, String>,
+    result: Result<ActivityPage, QueryError>,
     kind: PageKind,
     epoch: u64,
 ) -> Snapshot {
@@ -542,7 +564,7 @@ fn apply_page(
 fn apply_page_with_history(
     current: Snapshot,
     target: &Target,
-    result: Result<ActivityPage, String>,
+    result: Result<ActivityPage, QueryError>,
     kind: PageKind,
     epoch: u64,
     settings_revision: u64,
@@ -643,6 +665,7 @@ fn apply_page_with_history(
                 if history_limit_reached {
                     page.next_cursor = None;
                     page.issues.push(Issue {
+                        kind: IssueKind::Other,
                         provider: target.provider,
                         connection_id: Some(target.connection_id.clone()),
                         target_id: Some(target.id.clone()),
@@ -657,7 +680,7 @@ fn apply_page_with_history(
                     now,
                 );
             }
-            issues.extend(page.issues);
+            extend_issues(&mut issues, page.issues);
             if let Some(history_entry) = history_entry {
                 history.retain(|h| {
                     h.connection_id != target.connection_id
@@ -670,12 +693,16 @@ fn apply_page_with_history(
                 last_updated_at = Some(Utc::now().to_rfc3339());
             }
         }
-        Err(message) => issues.push(Issue {
-            provider: target.provider,
-            connection_id: Some(target.connection_id.clone()),
-            target_id: Some(target.id.clone()),
-            message,
-        }),
+        Err(error) => extend_issues(
+            &mut issues,
+            vec![Issue {
+                kind: error.kind,
+                provider: target.provider,
+                connection_id: Some(target.connection_id.clone()),
+                target_id: Some(target.id.clone()),
+                message: error.message,
+            }],
+        ),
     }
     activities.sort_by(|a, b| b.updated_at.cmp(&a.updated_at));
     let pending_targets = if kind == PageKind::Active
@@ -712,7 +739,7 @@ enum QueryOutcome {
 }
 
 impl QueryOutcome {
-    fn from_result(result: &Result<ActivityPage, String>) -> Self {
+    fn from_result(result: &Result<ActivityPage, QueryError>) -> Self {
         match result {
             Ok(page) if page.issues.is_empty() => Self::Full,
             Ok(page) if !page.activities.is_empty() => Self::Partial,
@@ -853,10 +880,25 @@ async fn bounded_active(
     cli: Option<&CliInvocation>,
     target: &Target,
     identity: Option<&str>,
-) -> Result<ActivityPage, String> {
+) -> Result<ActivityPage, QueryError> {
     tokio::time::timeout(REQUEST_TIMEOUT, catalog::active(cli, target, identity))
         .await
-        .map_err(|_| "Active run lookup timed out; the recent list is partial.".to_owned())?
+        .map_err(|_| {
+            QueryError::new(
+                IssueKind::TimedOut,
+                "Active run lookup timed out; the recent list is partial.",
+            )
+        })?
+}
+
+/// Adds issues while keeping one issue per target and classified cause, so a
+/// failed recent page and its active scan do not report the same cause twice.
+fn extend_issues(issues: &mut Vec<Issue>, added: Vec<Issue>) {
+    for issue in added {
+        if !issues.iter().any(|known| known.same_cause(&issue)) {
+            issues.push(issue);
+        }
+    }
 }
 
 fn in_history_range(activity: &Activity, cutoff: chrono::DateTime<Utc>) -> bool {

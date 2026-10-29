@@ -2,9 +2,15 @@ import { formatRelativeTime, useI18n } from "../i18n";
 import { summarizeQueryHealth, type QueryState } from "../queryHealth";
 import type { Connection, Provider, Snapshot, Target } from "../domain";
 import { connectionProgressCopy } from "../connectionProgressCopy";
+import { isGithubProvider } from "../cliAccounts";
 
 export type ConnectionProgressAction =
-  "account" | "authentication" | "projects" | "query" | "verify";
+  | "account"
+  | "authentication"
+  | "githubAccount"
+  | "projects"
+  | "query"
+  | "verify";
 type RowState = "complete" | "waiting" | "warning" | "checking";
 
 type ProgressRow = {
@@ -77,6 +83,7 @@ export function ConnectionProgress({
     connection,
     verificationError,
     isTokenProvider,
+    github: isGithubProvider(provider),
   });
   const project: ProgressRow = selectionPending
     ? {
@@ -228,12 +235,14 @@ function accountProgress({
   connection,
   verificationError,
   isTokenProvider,
+  github,
 }: {
   c: (key: Parameters<typeof connectionProgressCopy>[1]) => string;
   accountPresent: boolean;
   connection: Connection | undefined;
   verificationError?: string;
   isTokenProvider: boolean;
+  github: boolean;
 }): ProgressRow {
   if (!accountPresent) {
     return {
@@ -249,6 +258,20 @@ function accountProgress({
       label: c("account"),
       detail: c("accountVerified"),
       state: "complete",
+    };
+  if (
+    github &&
+    connection?.status !== "connected" &&
+    ["needsAccount", "noAccess", "accountMismatch"].includes(
+      connection?.kind ?? "",
+    )
+  )
+    return {
+      label: c("account"),
+      detail: c("githubAccountNeeded"),
+      state: "warning",
+      action: "githubAccount",
+      actionLabel: c("chooseGithubAccount"),
     };
   const needsAuthentication =
     !isTokenProvider &&

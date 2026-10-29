@@ -119,22 +119,32 @@ pub async fn page(
     .collect::<Vec<_>>()
     .await;
     let mut activities = Vec::new();
-    let mut issues = Vec::new();
+    let mut failures = Vec::new();
     for (record, result) in observations {
         let status = match result {
             Ok(statuses) => statuses.into_iter().next(),
             Err(error) => {
-                issues.push(Issue {
-                    provider: target.provider,
-                    connection_id: Some(target.connection_id.clone()),
-                    target_id: Some(target.id.clone()),
-                    message: error.user_message("GitHub Deployments"),
-                });
+                failures.push(("status", error));
                 None
             }
         };
         activities.push(map(record, status, target, identity));
     }
+    // One issue per cause, however many deployment statuses failed.
+    let issues = super::grouped_probe_failures(&failures)
+        .into_iter()
+        .map(|(error, failed)| Issue {
+            kind: error.issue_kind(),
+            provider: target.provider,
+            connection_id: Some(target.connection_id.clone()),
+            target_id: Some(target.id.clone()),
+            message: format!(
+                "GitHub Deployments could not read {} deployment statuses: {}",
+                failed.len(),
+                error.user_message("GitHub Deployments")
+            ),
+        })
+        .collect();
     Ok(ActivityPage {
         activities,
         issues,

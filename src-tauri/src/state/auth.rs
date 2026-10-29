@@ -46,11 +46,15 @@ impl AppState {
         exists
     }
 
+    /// Binds a GitHub connection to a gh account. A connection already bound to
+    /// another GitHub user is rebound only when the user explicitly confirmed the
+    /// change (`allow_identity_change`); automatic binding never passes it.
     pub async fn connect_github_cli_account<P: SnapshotPublisher>(
         &self,
         provider: Provider,
         connection_id: &str,
         username: &str,
+        allow_identity_change: bool,
         publisher: &P,
     ) -> Result<Account, String> {
         self.ensure_settings_writable()?;
@@ -75,11 +79,11 @@ impl AppState {
         if !verified_username.eq_ignore_ascii_case(username) {
             return Err("GitHub CLI returned a different account than the selected user.".into());
         }
-        if candidate
+        let identity_changed = candidate
             .profile
             .as_deref()
-            .is_some_and(|expected| expected != identity)
-        {
+            .is_some_and(|expected| expected != identity);
+        if identity_changed && !allow_identity_change {
             return Err("The selected GitHub CLI user does not match this connection's saved identity. Existing targets were preserved.".into());
         }
 
@@ -122,8 +126,95 @@ impl AppState {
         *slot = bound.clone();
         self.publish_settings_locked(settings, previous, publisher)
             .await?;
+        if identity_changed {
+            self.forget_connection_identity(connection_id, publisher)
+                .await;
+        }
         self.refresh_epoch.fetch_add(1, Ordering::SeqCst);
         Ok(bound)
+    }
+
+    /// Drops observations made under a connection's previous identity so that
+    /// "my runs" and notifications are recomputed for the new identity by the
+    /// next query instead of reusing the old account's ownership.
+    async fn forget_connection_identity<P: SnapshotPublisher>(
+        &self,
+        connection_id: &str,
+        publisher: &P,
+    ) {
+        self.history_cache
+            .lock()
+            .await
+            .remove_connection(connection_id);
+        let current = self.snapshot.read().await.clone();
+        let targets: Vec<&Target> = current
+            .settings
+            .targets
+            .iter()
+            .filter(|target| target.connection_id == connection_id)
+            .collect();
+        let target_keys: Vec<String> = targets.iter().map(|target| target.key()).collect();
+        self.notification_engine
+            .lock()
+            .await
+            .forget_targets(&target_keys);
+        // Nothing is known about the new identity yet: report the targets as
+        // being checked rather than as an empty successful result.
+        let attempted_at = Utc::now().to_rfc3339();
+        let query_health = current
+            .query_health
+            .iter()
+            .filter(|health| health.connection_id != connection_id)
+            .cloned()
+            .chain(targets.iter().map(|target| QueryHealth {
+                provider: target.provider,
+                connection_id: target.connection_id.clone(),
+                target_id: target.id.clone(),
+                status: crate::models::QueryHealthStatus::Checking,
+                last_attempt_at: attempted_at.clone(),
+                last_successful_at: None,
+            }))
+            .collect();
+        let pending_targets = current
+            .pending_targets
+            .iter()
+            .filter(|key| !target_keys.contains(key))
+            .cloned()
+            .chain(target_keys.iter().cloned())
+            .collect();
+        let updated = Snapshot {
+            query_health,
+            pending_targets,
+            connections: current
+                .connections
+                .iter()
+                .filter(|item| item.connection_id != connection_id)
+                .cloned()
+                .collect(),
+            activities: current
+                .activities
+                .iter()
+                .filter(|item| item.connection_id != connection_id)
+                .cloned()
+                .collect(),
+            history: current
+                .history
+                .iter()
+                .filter(|item| item.connection_id != connection_id)
+                .cloned()
+                .collect(),
+            issues: current
+                .issues
+                .iter()
+                .filter(|item| item.connection_id.as_deref() != Some(connection_id))
+                .cloned()
+                .collect(),
+            ..current.clone()
+        };
+        let updated = with_poll_interval(updated);
+        *self.snapshot.write().await = updated.clone();
+        publisher.publish_snapshot(&updated);
+        self.request_refresh();
     }
 
     pub async fn finalize_vercel_cli_account<P: SnapshotPublisher>(
