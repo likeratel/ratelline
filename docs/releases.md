@@ -28,6 +28,19 @@ the mounted image carries its own staple. DMG SHA-256:
 `5f8412b84b84a13ed9e9e7b65ca0c2551b95b3310a535327c2ddec9cc950e344`. It was built locally with
 `pnpm tauri build --target universal-apple-darwin`; no Windows installer was published.
 
+The public **v0.1.1** release on GitHub Releases (2026-10-29) is `ratelline_0.1.1_universal.dmg`, the
+first release under the ratelline name, a universal build from source commit `a29a4c4` signed with
+Developer ID and hardened runtime. It was built locally with
+`pnpm tauri build --target universal-apple-darwin --bundles app,dmg`. The app was notarized through
+the local `ratelline` notarytool keychain profile and stapled, the DMG was then rebuilt from the
+stapled app with the generated `bundle_dmg.sh` and signed, and the DMG was notarized and stapled with
+`scripts/release-notarize-macos.mjs`. Both passed `scripts/release-artifacts.mjs` (strict signature,
+secure timestamp, staple validation, Gatekeeper assessment as **Notarized Developer ID**); the
+mounted image contains only `ratelline.app` and the Applications link, and the app inside validates
+its own staple. DMG SHA-256, confirmed again on the asset downloaded from the release:
+`9a3c0d52c50a053b13aaaa12484ff8f588ede1eeba8ca8a1983ce22e9f21952e`. No Windows installer was
+published.
+
 A Developer ID candidate built on 2026-10-04 from the reviewed working tree passed app and DMG
 notarization, strict Developer ID signature verification with a secure timestamp, staple validation,
 and Gatekeeper assessment as **Notarized Developer ID**, with hardened runtime enabled. The DMG was
