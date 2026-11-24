@@ -41,6 +41,22 @@ its own staple. DMG SHA-256, confirmed again on the asset downloaded from the re
 `9a3c0d52c50a053b13aaaa12484ff8f588ede1eeba8ca8a1983ce22e9f21952e`. No Windows installer was
 published.
 
+The public **v0.1.2** release on GitHub Releases (2026-11-24) is `RatelLine_0.1.2_universal.dmg`, the
+first release whose macOS bundle is named `RatelLine.app` (a macOS-only `productName` in
+`src-tauri/tauri.macos.conf.json`; the binary and the bundle identifier are unchanged). It is a
+universal build from source commit `b5834e3` signed with Developer ID and hardened runtime, built
+locally with `pnpm tauri build --target universal-apple-darwin --bundles app,dmg`. The app was
+notarized through the local `ratelline` notarytool keychain profile and stapled. The generated disk
+image was then converted to a read-write image, its app replaced with the stapled one, converted back
+to a compressed image and signed, so the Finder layout was kept without rerunning `bundle_dmg.sh`;
+the DMG was notarized and stapled with `scripts/release-notarize-macos.mjs`. Both passed
+`scripts/release-artifacts.mjs` (strict signature, secure timestamp, staple validation, Gatekeeper
+assessment as **Notarized Developer ID**); the image contains only `RatelLine.app` and the
+Applications link, and the app inside validates its own staple. DMG SHA-256:
+`4e88ca68287bf5d411fde85808c32f08c0539512d60daa34057980f699180687`. The notarytool profile is
+unreadable while the screen is locked, so the Mac has to stay unlocked for the submission. No Windows
+installer was published.
+
 A Developer ID candidate built on 2026-10-04 from the reviewed working tree passed app and DMG
 notarization, strict Developer ID signature verification with a secure timestamp, staple validation,
 and Gatekeeper assessment as **Notarized Developer ID**, with hardened runtime enabled. The DMG was
