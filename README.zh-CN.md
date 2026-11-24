@@ -53,8 +53,8 @@ ratelline 是在菜单栏和系统托盘中无畏巡视部署线的监视者。�
 
 需要 macOS 12 或更高版本，支持 Apple Silicon 或 Intel。未发布 Windows 或 Linux 安装包。Windows 可从源码构建（参见[开发](#开发)）；Linux 构建未经验证。
 
-1. 从 [Releases 页面](https://github.com/likeratel/ratelline/releases/latest)下载最新的 `ratelline_<version>_universal.dmg`。每个版本都会列出该文件的 SHA-256；可用 `shasum -a 256 <file>.dmg` 校验。
-2. 打开 DMG，将 **ratelline** 拖到 **应用程序**。
+1. 从 [Releases 页面](https://github.com/likeratel/ratelline/releases/latest)下载最新的 `RatelLine_<version>_universal.dmg`。每个版本都会列出该文件的 SHA-256；可用 `shasum -a 256 <file>.dmg` 校验。
+2. 打开 DMG，将 **RatelLine** 拖到 **应用程序**。应用包名使用了大写字母，这样在 Spotlight 中输入 `line` 即可找到。
 3. 从“应用程序”打开 ratelline。应用已使用 Developer ID 签名并经过公证，因此 macOS 无需绕过安全提示即可打开。它只在菜单栏中运行，不显示 Dock 图标。
 4. 为每个要监控的服务安装并登录官方 CLI。ratelline 不捆绑任何服务商工具，也不保存 CLI 凭据。
 
@@ -80,7 +80,7 @@ ratelline 是在菜单栏和系统托盘中无畏巡视部署线的监视者。�
 
 ### 卸载
 
-1. 退出 ratelline，删除 `/Applications/ratelline.app`。
+1. 退出 ratelline，删除 `/Applications/RatelLine.app`。
 2. 如需同时删除设置和已保存的 Bitbucket、Cloudflare 令牌，请删除 `~/Library/Application Support/io.ratelline.desktop`；如果是从 crowline 升级的，也请删除同一文件夹中的 `io.crowline.desktop`。CLI 登录属于各个 CLI，不会受影响。
 
 ## 快速开始

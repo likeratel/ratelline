@@ -53,8 +53,8 @@ ratelline은 배포 라인을 겁 없이 순찰하는 메뉴 막대·시스템 �
 
 Apple Silicon 또는 Intel Mac의 macOS 12 이상이 필요합니다. Windows·Linux 설치 파일은 공개하지 않습니다. Windows는 소스에서 빌드할 수 있고([개발](#개발) 참고), Linux 빌드는 검증하지 않았습니다.
 
-1. [Releases 페이지](https://github.com/likeratel/ratelline/releases/latest)에서 최신 `ratelline_<version>_universal.dmg`를 내려받습니다. 각 릴리스에 파일의 SHA-256이 적혀 있으며 `shasum -a 256 <file>.dmg`로 확인할 수 있습니다.
-2. DMG를 열고 **ratelline**을 **Applications**로 끌어다 놓습니다.
+1. [Releases 페이지](https://github.com/likeratel/ratelline/releases/latest)에서 최신 `RatelLine_<version>_universal.dmg`를 내려받습니다. 각 릴리스에 파일의 SHA-256이 적혀 있으며 `shasum -a 256 <file>.dmg`로 확인할 수 있습니다.
+2. DMG를 열고 **RatelLine**을 **Applications**로 끌어다 놓습니다. Spotlight에서 `line`만 입력해도 찾을 수 있도록 번들 이름에 대문자를 넣었습니다.
 3. Applications에서 ratelline을 엽니다. 앱은 Developer ID로 서명되고 공증되어 있어 macOS 보안 설정을 우회하지 않고 열립니다. 메뉴 막대에서만 실행되며 Dock 아이콘은 없습니다.
 4. 모니터링할 서비스마다 공식 CLI를 설치하고 로그인합니다. ratelline은 서비스 도구를 동봉하지 않으며 CLI 인증 정보를 저장하지 않습니다.
 
@@ -80,7 +80,7 @@ Finder나 로그인 시 실행한 앱은 셸의 `PATH`를 상속하지 않습니
 
 ### 삭제
 
-1. ratelline을 종료하고 `/Applications/ratelline.app`을 삭제합니다.
+1. ratelline을 종료하고 `/Applications/RatelLine.app`을 삭제합니다.
 2. 설정과 저장된 Bitbucket·Cloudflare 토큰도 지우려면 `~/Library/Application Support/io.ratelline.desktop`을 삭제합니다. crowline에서 업그레이드했다면 같은 폴더의 `io.crowline.desktop`도 삭제합니다. CLI 로그인은 각 CLI의 것이므로 건드리지 않습니다.
 
 ## 빠른 시작

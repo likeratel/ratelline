@@ -53,8 +53,8 @@ Captured from the app’s browser preview with fictional projects and accounts. 
 
 Requires macOS 12 or later on Apple Silicon or Intel. No Windows or Linux installer is published. Windows can be built from source (see [Development](#development)); Linux builds are not verified.
 
-1. Download the latest `ratelline_<version>_universal.dmg` from the [Releases page](https://github.com/likeratel/ratelline/releases/latest). Each release lists the file's SHA-256; check it with `shasum -a 256 <file>.dmg`.
-2. Open the DMG and drag **ratelline** to **Applications**.
+1. Download the latest `RatelLine_<version>_universal.dmg` from the [Releases page](https://github.com/likeratel/ratelline/releases/latest). Each release lists the file's SHA-256; check it with `shasum -a 256 <file>.dmg`.
+2. Open the DMG and drag **RatelLine** to **Applications**. The bundle is capitalised so that Spotlight finds it when you type `line`.
 3. Open ratelline from Applications. The app is Developer ID signed and notarized, so macOS opens it without a security override. It runs in the menu bar only, with no Dock icon.
 4. Install and sign in to the official CLI for each service you want to monitor. ratelline bundles no provider tools and stores no CLI credentials.
 
@@ -80,7 +80,7 @@ Automatic updates are not configured. To update, right-click the menu-bar icon a
 
 ### Uninstall
 
-1. Quit ratelline and delete `/Applications/ratelline.app`.
+1. Quit ratelline and delete `/Applications/RatelLine.app`.
 2. To remove settings and the saved Bitbucket and Cloudflare tokens too, delete `~/Library/Application Support/io.ratelline.desktop`, and `io.crowline.desktop` in the same folder if you upgraded from crowline. CLI sign-ins belong to each CLI and are not touched.
 
 ## Quick start

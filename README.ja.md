@@ -53,8 +53,8 @@ ratelline はデプロイラインを恐れずに見回るメニューバー・�
 
 Apple Silicon または Intel の macOS 12 以降が必要です。Windows・Linux 用インストーラーは公開していません。Windows はソースからビルドできます（[開発](#開発)を参照）。Linux でのビルドは検証していません。
 
-1. [Releases ページ](https://github.com/likeratel/ratelline/releases/latest)から最新の `ratelline_<version>_universal.dmg` をダウンロードします。各リリースにはファイルの SHA-256 が記載されているので、`shasum -a 256 <file>.dmg` で確認してください。
-2. DMG を開き、**ratelline** を **Applications** にドラッグします。
+1. [Releases ページ](https://github.com/likeratel/ratelline/releases/latest)から最新の `RatelLine_<version>_universal.dmg` をダウンロードします。各リリースにはファイルの SHA-256 が記載されているので、`shasum -a 256 <file>.dmg` で確認してください。
+2. DMG を開き、**RatelLine** を **Applications** にドラッグします。Spotlight で `line` と入力するだけで見つかるよう、バンドル名に大文字を入れています。
 3. Applications から ratelline を開きます。アプリは Developer ID 署名と公証済みなので、macOS のセキュリティ設定を回避せずに開けます。メニューバーだけで動作し、Dock アイコンはありません。
 4. 監視したいサービスごとに公式 CLI をインストールしてサインインします。ratelline はサービスのツールを同梱せず、CLI の認証情報も保存しません。
 
@@ -80,7 +80,7 @@ Finder やログイン時に開いたアプリはシェルの `PATH` を引き�
 
 ### アンインストール
 
-1. ratelline を終了し、`/Applications/ratelline.app` を削除します。
+1. ratelline を終了し、`/Applications/RatelLine.app` を削除します。
 2. 設定と保存済みの Bitbucket・Cloudflare トークンも削除する場合は、`~/Library/Application Support/io.ratelline.desktop` を削除します。crowline からアップグレードした場合は、同じフォルダーの `io.crowline.desktop` も削除します。CLI のサインインは各 CLI のものであり、変更されません。
 
 ## クイックスタート
