@@ -10,3 +10,4 @@
 - README에 실제 지원 범위와 검증 한계를 기록한다. 테스트 데이터는 가상의 조직과 사용자만 사용한다.
 - TypeScript 확인: `pnpm check`, `pnpm test`, `pnpm build`, `pnpm test:e2e`.
 - Rust 확인: `cargo fmt --check`, `cargo test`, `cargo clippy --all-targets -- -D warnings` (src-tauri).
+- 릴리스를 게시했거나 빌드한 앱을 Applications에 설치한 뒤에는 프로젝트 안에 남은 앱 번들(`src-tauri/target/**/bundle/macos/*.app`)을 지운다. 남겨 두면 Spotlight에 설치본과 빌드 산출물이 함께 검색된다. DMG 등 릴리스 산출물은 지우지 않는다.
